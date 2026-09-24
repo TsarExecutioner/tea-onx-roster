@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="theme-color" content="#07090e"/>
+<meta name="theme-color" content="#0a0807"/>
 <title>TEA x ONX — Command Center</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -16,169 +16,218 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-/* ── Reset & base ──────────────────────────────────────────────── */
+/* ── Reset & base ──────────────────────────────────────────────────
+   #0a0807 = deep charcoal-black canvas (true dark foundation)
+   #141210 = card surface (noticeably warmer/lighter than canvas)
+   #1c1814 = raised surface / thead
+   #f97316 = ember orange (primary forge accent)
+   #fbbf24 = warm gold (secondary throne accent)
+   #f59e0b = amber (tertiary)
+   #ea580c = molten copper (deep ember)
+   #dc2626 = blood crimson (danger)
+──────────────────────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth;overflow-x:clip}
+
 body{
-  background-color:#07090e;
-  background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(56,189,248,.009) 2px,rgba(56,189,248,.009) 3px);
-  color:#d1d5db;font-family:'Inter',sans-serif;min-height:100vh;
+  background-color:#0a0807;
+  /* Forge-fire ambient: subtle warm radial glow in corners, scan-line texture */
+  background-image:
+    radial-gradient(ellipse at 10% 70%,rgba(120,50,10,.09) 0%,transparent 55%),
+    radial-gradient(ellipse at 90% 20%,rgba(160,70,10,.06) 0%,transparent 50%),
+    repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(245,158,11,.005) 3px,rgba(245,158,11,.005) 4px);
+  color:#e7e5e4;
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
   overflow-y:auto;overflow-x:hidden;
   overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y;
 }
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:#07090e}
-::-webkit-scrollbar-thumb{background:rgba(245,158,11,.35);border-radius:2px}
 
-/* ── Header ────────────────────────────────────────────────────── */
+/* Scrollbars */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#0a0807}
+::-webkit-scrollbar-thumb{background:rgba(245,158,11,.4);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:rgba(249,115,22,.6)}
+
+/* ── Header ────────────────────────────────────────────────────────
+   Slightly lighter than canvas, gold bottom glow + forge gradient
+──────────────────────────────────────────────────────────────────── */
 .hdr{
-  background:linear-gradient(180deg,#0b0f1a 0%,#07090e 100%);
-  border-bottom:1px solid rgba(245,158,11,.3);
-  box-shadow:0 2px 40px rgba(0,0,0,.7);
+  background:linear-gradient(180deg,#1c1410 0%,#110d0b 100%);
+  border-bottom:1px solid rgba(245,158,11,.35);
+  box-shadow:0 1px 0 rgba(249,115,22,.12),0 4px 30px rgba(0,0,0,.7);
   position:relative;
 }
 .hdr::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(245,158,11,.45) 30%,rgba(56,189,248,.3) 70%,transparent);
-}
-.abar{
-  background:linear-gradient(90deg,rgba(9,12,20,.99),rgba(6,8,16,.99));
-  border-bottom:1px solid rgba(139,92,246,.2);
-  box-shadow:0 2px 20px rgba(0,0,0,.5);
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(245,158,11,.6) 25%,rgba(249,115,22,.5) 75%,transparent);
 }
 
-/* ── Cards ─────────────────────────────────────────────────────── */
+/* Admin bar */
+.abar{
+  background:rgba(14,11,9,.98);
+  border-bottom:1px solid rgba(245,158,11,.18);
+  box-shadow:0 2px 20px rgba(0,0,0,.6);
+}
+
+/* ── Cards — stone-plate panels ────────────────────────────────────
+   Must pop clearly above the #0a0807 canvas.
+   Background: #141210 (warm dark stone)
+   Border: visible warm amber line
+   Shadow: deep drop + subtle inner glow
+──────────────────────────────────────────────────────────────────── */
 .card{
-  background:linear-gradient(145deg,rgba(12,16,25,.97),rgba(8,11,18,.95));
-  border:1px solid rgba(56,189,248,.08);
+  background:linear-gradient(145deg,#161310,#120f0d);
+  border:1px solid rgba(245,158,11,.22);
   border-radius:6px;
   position:relative;overflow:hidden;
   min-width:0;max-width:100%;box-sizing:border-box;
-  transition:border-color .2s;
+  box-shadow:0 6px 24px rgba(0,0,0,.65),inset 0 1px 0 rgba(251,191,36,.07);
+  transition:border-color .25s,box-shadow .25s;
 }
-.card:hover{border-color:rgba(56,189,248,.18)}
-/* Tactical corner brackets */
+.card:hover{
+  border-color:rgba(245,158,11,.42);
+  box-shadow:0 6px 24px rgba(0,0,0,.65),inset 0 1px 0 rgba(251,191,36,.1),0 0 22px rgba(249,115,22,.07);
+}
+/* Forge corner brackets */
 .card::before{
   content:'';position:absolute;top:0;left:0;
-  width:12px;height:12px;
-  border-top:1px solid rgba(56,189,248,.35);
-  border-left:1px solid rgba(56,189,248,.35);
-  border-radius:2px 0 0 0;pointer-events:none;z-index:1;
+  width:14px;height:14px;
+  border-top:1.5px solid rgba(249,115,22,.55);
+  border-left:1.5px solid rgba(249,115,22,.55);
+  border-radius:3px 0 0 0;pointer-events:none;z-index:1;
 }
 .card::after{
   content:'';position:absolute;bottom:0;right:0;
-  width:12px;height:12px;
-  border-bottom:1px solid rgba(245,158,11,.3);
-  border-right:1px solid rgba(245,158,11,.3);
-  border-radius:0 0 2px 0;pointer-events:none;z-index:1;
+  width:14px;height:14px;
+  border-bottom:1.5px solid rgba(251,191,36,.38);
+  border-right:1.5px solid rgba(251,191,36,.38);
+  border-radius:0 0 3px 0;pointer-events:none;z-index:1;
 }
 .kbar{height:2px;border-radius:1px;width:100%}
 
-/* ── Tab bar ───────────────────────────────────────────────────── */
+/* ── Tab bar ────────────────────────────────────────────────────── */
 .tab-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tab-scroll::-webkit-scrollbar{display:none}
+
 .tb{
   flex-shrink:0;padding:10px 18px;
   font-family:'Rajdhani',sans-serif;font-weight:700;
-  font-size:.85rem;letter-spacing:1px;text-transform:uppercase;
-  color:#374151;cursor:pointer;background:transparent;
+  font-size:.86rem;letter-spacing:1px;text-transform:uppercase;
+  color:#44403c;cursor:pointer;background:transparent;
   border:none;border-bottom:2px solid transparent;
   white-space:nowrap;transition:all .2s;
 }
-.tb:hover{color:#6b7280}
-.tb.active{color:#f59e0b;border-bottom-color:#f59e0b;text-shadow:0 0 14px rgba(245,158,11,.5)}
+.tb:hover{color:#78716c}
+.tb.active{
+  color:#fbbf24;
+  border-bottom-color:#f97316;
+  text-shadow:0 0 18px rgba(249,115,22,.75),0 0 40px rgba(249,115,22,.3);
+}
 .tp{display:none;min-width:0;max-width:100%}
 .tp.active{display:block;min-width:0;max-width:100%}
 
-/* ── Tables ────────────────────────────────────────────────────── */
-.dt{width:100%;border-collapse:collapse;font-size:.79rem}
-.dt thead tr{background:linear-gradient(90deg,rgba(8,11,18,.99),rgba(12,16,25,.99));border-bottom:1px solid rgba(245,158,11,.15)}
+/* Tab bar background */
+.tab-bar-bg{
+  background:rgba(10,8,7,.97);
+  border-bottom:1px solid rgba(245,158,11,.12);
+}
+
+/* ── Data tables ────────────────────────────────────────────────── */
+.dt{width:100%;border-collapse:collapse;font-size:.8rem}
+.dt thead tr{
+  background:linear-gradient(90deg,#1c1814,#19150f);
+  border-bottom:1px solid rgba(245,158,11,.25);
+}
 .dt thead th{
-  color:#4b5563;font-family:'Rajdhani',sans-serif;font-weight:700;
+  color:#78716c;
+  font-family:'Rajdhani',sans-serif;font-weight:700;
   letter-spacing:1.2px;text-transform:uppercase;padding:10px 12px;
   text-align:left;cursor:pointer;white-space:nowrap;user-select:none;
-  border-right:1px solid rgba(56,189,248,.04);transition:color .15s;
+  border-right:1px solid rgba(245,158,11,.06);transition:color .15s;
 }
 .dt thead th:last-child{border-right:none}
-.dt thead th:hover{color:#38bdf8}
+.dt thead th:hover{color:#d97706}
 .dt thead th .si{opacity:.25;margin-left:3px;font-size:.72em}
-.dt thead th.asc .si,.dt thead th.desc .si{opacity:1;color:#f59e0b}
-.dt tbody tr{border-bottom:1px solid rgba(56,189,248,.035);transition:background .12s}
-.dt tbody tr:nth-child(even){background:rgba(255,255,255,.008)}
-.dt tbody tr:hover{background:rgba(56,189,248,.025)}
-.dt tbody td{padding:9px 12px;vertical-align:middle;border-right:1px solid rgba(56,189,248,.03)}
+.dt thead th.asc .si,.dt thead th.desc .si{opacity:1;color:#fbbf24}
+.dt tbody tr{border-bottom:1px solid rgba(245,158,11,.06);transition:background .12s}
+.dt tbody tr:nth-child(even){background:rgba(255,255,255,.012)}
+.dt tbody tr:hover{background:rgba(245,158,11,.05)}
+.dt tbody td{padding:9px 12px;vertical-align:middle;border-right:1px solid rgba(245,158,11,.04)}
 .dt tbody td:last-child{border-right:none}
 .tw{width:100%;max-width:100%;overflow-x:auto;border-radius:6px;-webkit-overflow-scrolling:touch}
 .card.tw,.card>.tw{overflow-x:auto;max-width:100%;contain:inline-size}
 
-/* ── Mobile player card ────────────────────────────────────────── */
+/* ── Mobile player card ─────────────────────────────────────────── */
 .pcard{
-  background:linear-gradient(145deg,rgba(12,16,25,.97),rgba(8,11,18,.95));
-  border:1px solid rgba(56,189,248,.08);border-radius:6px;
+  background:linear-gradient(145deg,#161310,#120f0d);
+  border:1px solid rgba(245,158,11,.2);border-radius:6px;
   padding:13px;margin-bottom:10px;position:relative;overflow:hidden;
-  transition:border-color .2s;min-width:0;
+  box-shadow:0 4px 18px rgba(0,0,0,.6);
+  transition:border-color .2s,box-shadow .2s;min-width:0;
 }
 .pcard::before{
   content:'';position:absolute;top:0;left:0;
-  width:2px;height:100%;
-  background:linear-gradient(180deg,rgba(56,189,248,.7) 0%,rgba(56,189,248,.1) 100%);
+  width:2.5px;height:100%;
+  background:linear-gradient(180deg,#f97316 0%,rgba(249,115,22,.2) 100%);
 }
-.pcard:hover{border-color:rgba(56,189,248,.22)}
-.pcard-name{font-weight:600;font-size:.9rem;color:#f1f5f9;line-height:1.2}
-.pcard-badges{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.pcard:hover{border-color:rgba(245,158,11,.4);box-shadow:0 4px 18px rgba(0,0,0,.6),0 0 14px rgba(249,115,22,.06)}
+.pcard-name{font-weight:600;font-size:.92rem;color:#fef3c7;line-height:1.2}
+.pcard-badges{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
 .pcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}
 .pcard-stat{
-  background:rgba(4,5,10,.7);border:1px solid rgba(56,189,248,.06);
+  background:rgba(10,8,7,.8);border:1px solid rgba(245,158,11,.1);
   border-radius:4px;padding:7px 5px;text-align:center;
 }
-.pcard-val{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05rem;line-height:1}
-.pcard-lbl{font-size:.58rem;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.pcard-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(56,189,248,.05)}
+.pcard-val{font-family:'Rajdhani',sans-serif;font-weight:800;font-size:1.05rem;line-height:1}
+.pcard-lbl{font-size:.58rem;color:#57534e;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.pcard-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(245,158,11,.08)}
 
-/* ── Badges ────────────────────────────────────────────────────── */
+/* ── Badges ─────────────────────────────────────────────────────── */
 .badge{
   display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;
   font-size:.67rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
   white-space:nowrap;font-family:'Rajdhani',sans-serif;
 }
 /* Origin */
-.b-cyan  {background:rgba(56,189,248,.1); color:#38bdf8;border:1px solid rgba(56,189,248,.28);box-shadow:0 0 6px rgba(56,189,248,.1)}
-.b-purple{background:rgba(139,92,246,.1); color:#a78bfa;border:1px solid rgba(139,92,246,.28);box-shadow:0 0 6px rgba(139,92,246,.1)}
+.b-cyan  {background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.35);box-shadow:0 0 6px rgba(249,115,22,.1)}
+.b-purple{background:rgba(234,88,12,.12); color:#f97316;border:1px solid rgba(234,88,12,.35);box-shadow:0 0 6px rgba(234,88,12,.1)}
 /* Placement */
-.b-green {background:rgba(16,185,129,.1); color:#10b981;border:1px solid rgba(16,185,129,.25)}
-.b-amber {background:rgba(245,158,11,.1); color:#f59e0b;border:1px solid rgba(245,158,11,.25)}
+.b-green {background:rgba(245,158,11,.1); color:#fbbf24;border:1px solid rgba(245,158,11,.32)}
+.b-amber {background:rgba(251,191,36,.1); color:#fde68a;border:1px solid rgba(251,191,36,.32)}
 /* Rank / flag */
-.b-red   {background:rgba(239,68,68,.1);  color:#ef4444;border:1px solid rgba(239,68,68,.25)}
-.b-blue  {background:rgba(59,130,246,.1); color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
-.b-gray  {background:rgba(107,114,128,.1);color:#9ca3af;border:1px solid rgba(107,114,128,.22)}
-.b-pink  {background:rgba(236,72,153,.1); color:#f472b6;border:1px solid rgba(236,72,153,.25)}
+.b-red   {background:rgba(220,38,38,.1);  color:#f87171;border:1px solid rgba(220,38,38,.32)}
+.b-blue  {background:rgba(245,158,11,.1); color:#fbbf24;border:1px solid rgba(245,158,11,.28)}
+.b-gray  {background:rgba(87,83,78,.1);   color:#a8a29e;border:1px solid rgba(87,83,78,.28)}
+.b-pink  {background:rgba(234,88,12,.1);  color:#fb923c;border:1px solid rgba(234,88,12,.28)}
 
-/* ── Inputs ────────────────────────────────────────────────────── */
+/* ── Inputs ─────────────────────────────────────────────────────── */
 .inp{
-  background:rgba(4,5,10,.85);border:1px solid rgba(56,189,248,.12);
-  color:#e2e8f0;border-radius:4px;padding:7px 11px;outline:none;
+  background:rgba(10,8,7,.9);border:1px solid rgba(245,158,11,.18);
+  color:#e7e5e4;border-radius:4px;padding:7px 11px;outline:none;
   transition:border-color .2s,box-shadow .2s;font-size:.82rem;font-family:inherit;
 }
-.inp:focus{border-color:rgba(56,189,248,.45);box-shadow:0 0 0 1px rgba(56,189,248,.12)}
+.inp:focus{border-color:rgba(245,158,11,.5);box-shadow:0 0 0 1px rgba(245,158,11,.15)}
 .inp-icon{padding-left:36px}
 .sw{position:relative}
-.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#374151}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#57534e}
 .fl{
-  display:block;font-size:.68rem;font-weight:700;color:#6b7280;
+  display:block;font-size:.68rem;font-weight:700;
+  color:rgba(251,191,36,.6);
   letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;
   font-family:'Rajdhani',sans-serif;
 }
 .fi{
-  width:100%;background:rgba(4,5,10,.9);border:1px solid rgba(56,189,248,.12);
-  color:#e2e8f0;border-radius:4px;padding:9px 11px;outline:none;
+  width:100%;background:rgba(10,8,7,.92);border:1px solid rgba(245,158,11,.18);
+  color:#e7e5e4;border-radius:4px;padding:9px 11px;outline:none;
   font-size:.85rem;transition:border-color .2s,box-shadow .2s;font-family:inherit;
 }
-.fi:focus{border-color:rgba(56,189,248,.45);box-shadow:0 0 0 1px rgba(56,189,248,.1)}
+.fi:focus{border-color:rgba(245,158,11,.5);box-shadow:0 0 0 1px rgba(245,158,11,.12)}
 @media(max-width:767px){.fi{padding:13px 12px;font-size:1rem;min-height:44px}}
 textarea.fi{resize:vertical;min-height:72px}
 select.fi{cursor:pointer;appearance:none}
 
-/* ── Buttons ───────────────────────────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────────────────── */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:5px;
   padding:7px 14px;border-radius:4px;
@@ -188,72 +237,78 @@ select.fi{cursor:pointer;appearance:none}
 }
 .btn:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:767px){.btn{min-height:44px}}
-.btn-cyan  {background:rgba(56,189,248,.07); border:1px solid rgba(56,189,248,.28); color:#38bdf8}
-.btn-cyan:hover:not(:disabled)  {background:rgba(56,189,248,.14);box-shadow:0 0 14px rgba(56,189,248,.18)}
-.btn-green {background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.28); color:#10b981}
-.btn-green:hover:not(:disabled) {background:rgba(16,185,129,.14);box-shadow:0 0 14px rgba(16,185,129,.18)}
-.btn-red   {background:rgba(239,68,68,.07);  border:1px solid rgba(239,68,68,.28);  color:#ef4444}
-.btn-red:hover:not(:disabled)   {background:rgba(239,68,68,.14); box-shadow:0 0 14px rgba(239,68,68,.18)}
-.btn-amber {background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.28); color:#f59e0b}
-.btn-amber:hover:not(:disabled) {background:rgba(245,158,11,.14);box-shadow:0 0 14px rgba(245,158,11,.18)}
-.btn-purple{background:rgba(139,92,246,.07); border:1px solid rgba(139,92,246,.28); color:#a78bfa}
-.btn-purple:hover:not(:disabled){background:rgba(139,92,246,.14);box-shadow:0 0 14px rgba(139,92,246,.18)}
-.btn-gray  {background:rgba(107,114,128,.07);border:1px solid rgba(107,114,128,.22);color:#9ca3af}
-.btn-gray:hover:not(:disabled)  {background:rgba(107,114,128,.13)}
+
+.btn-cyan  {background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.35);color:#fb923c}
+.btn-cyan:hover:not(:disabled)  {background:rgba(249,115,22,.2);box-shadow:0 0 16px rgba(249,115,22,.2)}
+.btn-green {background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35);color:#fbbf24}
+.btn-green:hover:not(:disabled) {background:rgba(245,158,11,.2);box-shadow:0 0 16px rgba(245,158,11,.2)}
+.btn-red   {background:rgba(220,38,38,.1);  border:1px solid rgba(220,38,38,.35); color:#f87171}
+.btn-red:hover:not(:disabled)   {background:rgba(220,38,38,.18);box-shadow:0 0 14px rgba(220,38,38,.2)}
+.btn-amber {background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.38);color:#fde68a}
+.btn-amber:hover:not(:disabled) {background:rgba(251,191,36,.2);box-shadow:0 0 16px rgba(245,158,11,.25)}
+.btn-purple{background:rgba(234,88,12,.1);  border:1px solid rgba(234,88,12,.35); color:#fb923c}
+.btn-purple:hover:not(:disabled){background:rgba(234,88,12,.2);box-shadow:0 0 14px rgba(234,88,12,.2)}
+.btn-gray  {background:rgba(87,83,78,.1);   border:1px solid rgba(87,83,78,.28);  color:#a8a29e}
+.btn-gray:hover:not(:disabled)  {background:rgba(87,83,78,.18)}
 
 .psel{
-  background:rgba(4,5,10,.85);border:1px solid rgba(56,189,248,.18);
-  color:#e2e8f0;border-radius:4px;padding:3px 7px;
+  background:rgba(10,8,7,.9);border:1px solid rgba(245,158,11,.22);
+  color:#e7e5e4;border-radius:4px;padding:3px 7px;
   font-size:.7rem;font-weight:700;font-family:'Rajdhani',sans-serif;
   cursor:pointer;outline:none;letter-spacing:.3px;text-transform:uppercase;
 }
 @media(max-width:767px){.psel{min-height:44px;padding:8px 10px;font-size:.8rem;flex:1;border-radius:4px}}
 
-/* ── Modals ────────────────────────────────────────────────────── */
+/* ── Modals ─────────────────────────────────────────────────────── */
 .mbg{
-  position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);
+  position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(8px);
   z-index:200;display:none;align-items:center;justify-content:center;
   padding:16px;pointer-events:none;
 }
 .mbg.open{display:flex;pointer-events:all}
 .mbox{
-  background:linear-gradient(145deg,rgba(12,16,25,.99),rgba(7,9,16,.98));
-  border:1px solid rgba(56,189,248,.18);border-radius:8px;
+  background:linear-gradient(145deg,#1a1510,#110d0b);
+  border:1px solid rgba(245,158,11,.28);border-radius:8px;
   width:100%;max-width:560px;max-height:92vh;
   overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:26px;position:relative;
-  box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 50px rgba(56,189,248,.04);
+  box-shadow:0 30px 80px rgba(0,0,0,.85),0 0 40px rgba(245,158,11,.04);
 }
 .mbox::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(56,189,248,.5) 50%,transparent);
+  content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(251,191,36,.6) 35%,rgba(249,115,22,.5) 65%,transparent);
 }
 .mbox.wide{max-width:740px}
 @media(max-width:767px){
   .mbg{align-items:flex-end;padding:0}
-  .mbox{max-width:100%;border-radius:14px 14px 0 0;max-height:94vh;width:100%;
+  .mbox{max-width:100%;border-radius:16px 16px 0 0;max-height:94vh;width:100%;
     padding:20px 16px calc(20px + env(safe-area-inset-bottom));
     overflow-y:auto;-webkit-overflow-scrolling:touch}
   .mbox.wide{max-width:100%}
 }
 
-/* ── Progress bars ─────────────────────────────────────────────── */
-.pb{height:5px;background:rgba(4,5,10,.8);border-radius:3px;overflow:hidden}
-.pf{height:100%;border-radius:3px;transition:width .5s ease}
+/* ── Progress bars — bright forge fills ─────────────────────────── */
+.pb{height:6px;background:rgba(10,8,7,.9);border-radius:3px;overflow:hidden;border:1px solid rgba(245,158,11,.08)}
+.pf{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,#f97316 0%,#fbbf24 100%);
+  box-shadow:0 0 8px rgba(249,115,22,.35);
+  transition:width .6s ease;
+}
 
-/* ── Tag pills ─────────────────────────────────────────────────── */
+/* ── Tag pills ──────────────────────────────────────────────────── */
 .tpill{
   display:inline-flex;align-items:center;padding:1px 6px;border-radius:2px;
   font-size:.62rem;font-weight:700;letter-spacing:.3px;margin:1px;
   font-family:'Rajdhani',sans-serif;
 }
 
-/* ── Spinner ───────────────────────────────────────────────────── */
+/* ── Spinner ────────────────────────────────────────────────────── */
 .spin{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
 
-/* ── Toast ─────────────────────────────────────────────────────── */
+/* ── Toast ──────────────────────────────────────────────────────── */
 #toast{
   position:fixed;bottom:80px;right:16px;z-index:9999;
   padding:10px 16px;border-radius:4px;
@@ -264,56 +319,56 @@ select.fi{cursor:pointer;appearance:none}
 }
 @media(min-width:768px){#toast{bottom:24px;right:24px;max-width:320px}}
 #toast.show{transform:translateY(0);opacity:1}
-#toast.success{background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.4); color:#10b981;box-shadow:0 0 20px rgba(16,185,129,.1)}
-#toast.error  {background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.4);  color:#ef4444;box-shadow:0 0 20px rgba(239,68,68,.1)}
-#toast.info   {background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.4); color:#38bdf8;box-shadow:0 0 20px rgba(56,189,248,.1)}
-#toast.warn   {background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.4); color:#f59e0b;box-shadow:0 0 20px rgba(245,158,11,.1)}
+#toast.success{background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.45);color:#fbbf24;box-shadow:0 0 20px rgba(245,158,11,.12)}
+#toast.error  {background:rgba(220,38,38,.1);  border:1px solid rgba(220,38,38,.45); color:#f87171;box-shadow:0 0 20px rgba(220,38,38,.12)}
+#toast.info   {background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.45);color:#fb923c;box-shadow:0 0 20px rgba(249,115,22,.12)}
+#toast.warn   {background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.45);color:#fde68a;box-shadow:0 0 20px rgba(251,191,36,.1)}
 
-/* ── Bottom nav ────────────────────────────────────────────────── */
+/* ── Bottom nav ─────────────────────────────────────────────────── */
 .bnav{
   position:fixed;bottom:0;left:0;right:0;
-  background:linear-gradient(0deg,#07090e,rgba(9,12,18,.99));
-  border-top:1px solid rgba(245,158,11,.2);z-index:100;
+  background:linear-gradient(0deg,#0a0807,rgba(14,11,9,.99));
+  border-top:1px solid rgba(245,158,11,.22);z-index:100;
   padding-bottom:env(safe-area-inset-bottom);
-  box-shadow:0 -4px 30px rgba(0,0,0,.7);
+  box-shadow:0 -4px 30px rgba(0,0,0,.8);
 }
 .bnav-row{display:flex;align-items:stretch}
 .bnav-btn{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:8px 4px;font-size:.56rem;color:#1f2937;cursor:pointer;
+  padding:8px 4px;font-size:.56rem;color:#292524;cursor:pointer;
   border:none;background:transparent;min-height:56px;gap:3px;
   transition:color .2s;font-family:'Rajdhani',sans-serif;
   font-weight:700;letter-spacing:.5px;text-transform:uppercase;
 }
-.bnav-btn.active{color:#f59e0b;text-shadow:0 0 10px rgba(245,158,11,.4)}
+.bnav-btn.active{color:#fbbf24;text-shadow:0 0 12px rgba(245,158,11,.6)}
 .bnav-btn svg{width:19px;height:19px;flex-shrink:0}
 
-/* ── Admin FAB ─────────────────────────────────────────────────── */
+/* ── Admin FAB ──────────────────────────────────────────────────── */
 .fab{
   position:fixed;bottom:72px;right:16px;z-index:90;
   width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,#f59e0b,#d97706);
+  background:linear-gradient(135deg,#f97316,#ea580c);
   border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 20px rgba(245,158,11,.45),0 0 0 1px rgba(245,158,11,.25);
-  transition:transform .2s,box-shadow .2s;color:#07090e;
+  box-shadow:0 4px 20px rgba(249,115,22,.5),0 0 0 1px rgba(245,158,11,.3);
+  transition:transform .2s,box-shadow .2s;color:#0a0807;
 }
 .fab:active{transform:scale(.92)}
-.fab:hover{box-shadow:0 4px 30px rgba(245,158,11,.65),0 0 0 2px rgba(245,158,11,.4)}
+.fab:hover{box-shadow:0 4px 30px rgba(249,115,22,.7),0 0 0 2px rgba(245,158,11,.45)}
 
-/* ── Admin drawer ──────────────────────────────────────────────── */
+/* ── Admin drawer ───────────────────────────────────────────────── */
 .drawer{
   position:fixed;bottom:0;left:0;right:0;z-index:150;
-  background:linear-gradient(180deg,rgba(12,16,25,.99),rgba(7,9,16,.99));
-  border-top:1px solid rgba(245,158,11,.28);border-radius:16px 16px 0 0;
+  background:linear-gradient(180deg,#1a1510,#100d0b);
+  border-top:1.5px solid rgba(245,158,11,.35);border-radius:18px 18px 0 0;
   padding:20px 16px calc(80px + env(safe-area-inset-bottom));
   max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
   transform:translateY(100%);transition:transform .3s ease;pointer-events:none;
-  box-shadow:0 -12px 60px rgba(0,0,0,.8);
+  box-shadow:0 -12px 60px rgba(0,0,0,.9);
 }
 .drawer.open{transform:translateY(0);pointer-events:all}
 .drawer-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:140;
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:140;
   display:none;backdrop-filter:blur(5px);pointer-events:none;
 }
 .drawer-backdrop.open{display:block;pointer-events:all}
@@ -321,71 +376,78 @@ select.fi{cursor:pointer;appearance:none}
   display:flex;align-items:center;gap:14px;
   padding:12px 11px;border-radius:5px;
   cursor:pointer;transition:background .15s;
-  color:#d1d5db;border:none;background:transparent;
+  color:#d6d3d1;border:none;background:transparent;
   width:100%;font-family:'Rajdhani',sans-serif;
   font-size:.88rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
   min-height:54px;
 }
-.drawer-item:hover,.drawer-item:active{background:rgba(56,189,248,.05)}
+.drawer-item:hover,.drawer-item:active{background:rgba(245,158,11,.06);border:none}
 .drawer-icon{
   width:36px;height:36px;border-radius:5px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 
-/* ── CSV drop zone ─────────────────────────────────────────────── */
+/* ── CSV drop zone ──────────────────────────────────────────────── */
 .dropzone{
-  border:1px dashed rgba(56,189,248,.18);border-radius:6px;
+  border:1px dashed rgba(245,158,11,.22);border-radius:6px;
   padding:28px;text-align:center;cursor:pointer;transition:all .2s;
 }
 .dropzone:hover,.dropzone.over{
-  border-color:rgba(56,189,248,.45);background:rgba(56,189,248,.03);
+  border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.04);
 }
 
-/* ── Admin bar: desktop only ───────────────────────────────────── */
+/* ── Admin bar: desktop only ────────────────────────────────────── */
 @media(max-width:767px){#admin-bar{display:none!important}}
 
-/* ── Scroll safety ─────────────────────────────────────────────── */
+/* ── Scroll & touch safety ──────────────────────────────────────── */
 .tw,.tab-scroll,.mbox,.drawer{-webkit-overflow-scrolling:touch}
 [hidden]{pointer-events:none!important}
 @media(max-width:767px){main{padding-bottom:70px}}
 
-/* ── Power color classes ───────────────────────────────────────── */
-.pow-b{color:#38bdf8;text-shadow:0 0 8px rgba(56,189,248,.3)}  /* Billions */
-.pow-hi{color:#f59e0b}  /* >=500M */
-.pow-md{color:#10b981}  /* >=100M */
-.pow-lo{color:#9ca3af}  /* <100M  */
+/* ── Power colour classes ───────────────────────────────────────── */
+.pow-b {color:#fb923c;text-shadow:0 0 10px rgba(249,115,22,.4);font-weight:800} /* 1B+ */
+.pow-hi{color:#fbbf24;font-weight:700}   /* >=500M */
+.pow-md{color:#f59e0b;font-weight:700}   /* >=100M */
+.pow-lo{color:#78716c}                   /* <100M  */
 
-/* ── TC color classes ──────────────────────────────────────────── */
-.tc-hi{color:#38bdf8}
-.tc-md{color:#10b981}
-.tc-lo{color:#9ca3af}
-.tc-vl{color:#4b5563}
+/* ── TC colour classes ──────────────────────────────────────────── */
+.tc-hi{color:#fb923c}   /* 30+ */
+.tc-md{color:#f59e0b}   /* 25+ */
+.tc-lo{color:#a8a29e}   /* 20+ */
+.tc-vl{color:#57534e}   /* <20  */
+
+/* ── Section label style ────────────────────────────────────────── */
+.sec-lbl{
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:.68rem;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(251,191,36,.55);
+}
 </style>
 </head>
 <body>
 
-<!-- ════════════ HEADER ══════════════════════════════════════════ -->
+<!-- ════════ HEADER ══════════════════════════════════════════════ -->
 <header class="hdr sticky top-0 z-50">
   <div class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm" style="font-family:Rajdhani,sans-serif;background:linear-gradient(135deg,rgba(56,189,248,.2),rgba(56,189,248,.05));border:1px solid rgba(56,189,248,.4);color:#38bdf8;box-shadow:0 0 12px rgba(56,189,248,.2)">T</div>
-        <span class="font-black text-lg sm:text-xl tracking-widest text-white" style="font-family:Rajdhani,sans-serif;letter-spacing:3px">TEA</span>
-        <span class="text-yellow-600/60 font-thin text-sm mx-1">&#10005;</span>
-        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm" style="font-family:Rajdhani,sans-serif;background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.05));border:1px solid rgba(139,92,246,.4);color:#a78bfa;box-shadow:0 0 12px rgba(139,92,246,.2)">O</div>
-        <span class="font-black text-lg sm:text-xl tracking-widest text-white" style="font-family:Rajdhani,sans-serif;letter-spacing:3px">ONX</span>
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm flex-shrink-0" style="font-family:Rajdhani,sans-serif;background:linear-gradient(135deg,rgba(249,115,22,.25),rgba(249,115,22,.08));border:1px solid rgba(249,115,22,.5);color:#fb923c;box-shadow:0 0 14px rgba(249,115,22,.25),inset 0 0 8px rgba(249,115,22,.05)">T</div>
+        <span class="font-black text-lg sm:text-xl tracking-widest" style="font-family:Rajdhani,sans-serif;letter-spacing:3px;color:#fef3c7">TEA</span>
+        <span style="color:rgba(245,158,11,.4);font-size:.85rem;margin:0 2px">&#10005;</span>
+        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm flex-shrink-0" style="font-family:Rajdhani,sans-serif;background:linear-gradient(135deg,rgba(234,88,12,.25),rgba(234,88,12,.08));border:1px solid rgba(234,88,12,.5);color:#f97316;box-shadow:0 0 14px rgba(234,88,12,.2),inset 0 0 8px rgba(234,88,12,.05)">O</div>
+        <span class="font-black text-lg sm:text-xl tracking-widest" style="font-family:Rajdhani,sans-serif;letter-spacing:3px;color:#fef3c7">ONX</span>
       </div>
-      <div class="hidden sm:block h-4 w-px bg-yellow-900/50 mx-1"></div>
-      <span class="hidden sm:block text-xs tracking-widest uppercase" style="color:#4b5563;font-family:Rajdhani,sans-serif;font-weight:700">Command Center</span>
+      <div class="hidden sm:block h-4 w-px mx-1" style="background:rgba(245,158,11,.2)"></div>
+      <span class="hidden sm:block text-xs tracking-widest uppercase sec-lbl">Command Center</span>
     </div>
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-1.5 text-xs">
-        <span id="db-dot" class="dot" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.5)"></span>
-        <span id="db-txt" class="hidden sm:inline text-xs" style="color:#4b5563;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.5px;text-transform:uppercase">Connecting</span>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span id="db-dot" class="dot" style="background:#d97706;box-shadow:0 0 6px rgba(217,119,6,.5)"></span>
+        <span id="db-txt" class="hidden sm:inline text-xs sec-lbl">Connecting</span>
       </div>
       <div id="usr-bar" class="hidden sm:flex items-center gap-1.5" style="display:none!important">
-        <span class="dot bg-green-500"></span>
-        <span id="usr-email" class="text-xs font-semibold text-green-400 max-w-[130px] truncate" style="font-family:Rajdhani,sans-serif"></span>
+        <span class="dot" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.5)"></span>
+        <span id="usr-email" class="text-xs font-semibold max-w-[130px] truncate" style="color:#fbbf24;font-family:Rajdhani,sans-serif"></span>
       </div>
       <div id="admin-badge-mobile" class="hidden sm:hidden">
         <span class="badge b-amber text-xs">Admin</span>
@@ -403,13 +465,13 @@ select.fi{cursor:pointer;appearance:none}
   </div>
 </header>
 
-<!-- ════════════ ADMIN BAR (desktop) ════════════════════════════ -->
+<!-- ════════ ADMIN BAR (desktop only) ═══════════════════════════ -->
 <div id="admin-bar" class="abar hidden">
   <div class="max-w-screen-2xl mx-auto px-4 py-2 flex flex-wrap items-center gap-2 min-w-0 w-full">
     <div class="flex items-center gap-2">
-      <span class="dot" style="background:#a78bfa;box-shadow:0 0 6px rgba(139,92,246,.5)"></span>
-      <span class="text-xs font-black tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#a78bfa">COMMAND MODE</span>
-      <span id="admin-email-bar" class="text-xs ml-1" style="color:#374151;font-family:Rajdhani,sans-serif"></span>
+      <span class="dot" style="background:#f97316;box-shadow:0 0 6px rgba(249,115,22,.5)"></span>
+      <span class="text-xs font-black tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c">COMMAND MODE</span>
+      <span id="admin-email-bar" class="text-xs ml-1 sec-lbl font-normal normal-case tracking-normal"></span>
     </div>
     <div class="flex-1"></div>
     <button class="btn btn-green  text-xs" onclick="openPlayerModal(null)"><i class="fa-solid fa-user-plus text-xs"></i> Enlist Player</button>
@@ -419,38 +481,38 @@ select.fi{cursor:pointer;appearance:none}
   </div>
 </div>
 
-<!-- ════════════ MAIN ════════════════════════════════════════════ -->
+<!-- ════════ MAIN ════════════════════════════════════════════════ -->
 <main class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
 
   <!-- Loading -->
   <div id="loading-state" class="text-center py-24">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(56,189,248,.2);background:rgba(56,189,248,.04)">
-      <svg class="w-7 h-7 spin" style="color:#38bdf8" fill="none" viewBox="0 0 24 24">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.06)">
+      <svg class="w-7 h-7 spin" style="color:#f97316" fill="none" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="50" stroke-dashoffset="15"/>
       </svg>
     </div>
-    <p class="font-bold tracking-widest uppercase text-sm" style="font-family:Rajdhani,sans-serif;color:#38bdf8">Establishing Secure Link</p>
-    <p class="text-xs mt-1" style="color:#1f2937">phnaotocpdlrceljjqwp.supabase.co</p>
+    <p class="font-bold tracking-widest uppercase text-sm sec-lbl" style="font-size:.75rem">Establishing Secure Link</p>
+    <p class="text-xs mt-1" style="color:#44403c">phnaotocpdlrceljjqwp.supabase.co</p>
   </div>
 
   <!-- Error -->
   <div id="error-state" class="hidden text-center py-20">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.06)">
-      <i class="fa-solid fa-triangle-exclamation text-2xl" style="color:#ef4444"></i>
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.07)">
+      <i class="fa-solid fa-triangle-exclamation text-2xl" style="color:#f87171"></i>
     </div>
-    <p class="font-black tracking-widest uppercase text-sm mb-2" style="font-family:Rajdhani,sans-serif;color:#ef4444">Connection Lost</p>
-    <p class="text-xs mb-5" style="color:#4b5563" id="error-msg"></p>
-    <button class="btn btn-cyan" onclick="init()"><i class="fa-solid fa-rotate text-xs"></i> Retry</button>
+    <p class="font-black tracking-widest uppercase text-sm mb-2" style="font-family:Rajdhani,sans-serif;color:#f87171">Connection Lost</p>
+    <p class="text-xs mb-5" style="color:#57534e" id="error-msg"></p>
+    <button class="btn btn-amber" onclick="init()"><i class="fa-solid fa-rotate text-xs"></i> Retry</button>
   </div>
 
   <!-- App -->
   <div id="app" class="hidden">
 
-    <!-- KPI: 2-col mobile / 3-col tablet / 6-col desktop -->
+    <!-- KPI grid -->
     <section id="kpi" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6"></section>
 
     <!-- Tab bar -->
-    <div class="sticky z-30" style="top:56px;background:rgba(7,9,14,.97);border-bottom:1px solid rgba(245,158,11,.12)">
+    <div class="sticky z-30 tab-bar-bg" style="top:56px">
       <div class="tab-scroll flex">
         <button class="tb active" data-tab="ov"><i class="fa-solid fa-chart-line mr-1 text-xs"></i>Overview</button>
         <button class="tb" data-tab="main"><i class="fa-solid fa-shield-halved mr-1 text-xs"></i>Main Alliance</button>
@@ -463,25 +525,25 @@ select.fi{cursor:pointer;appearance:none}
     <div id="tab-ov" class="tp active pt-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
         <div class="card p-4 sm:p-5">
-          <p class="text-xs font-black tracking-widest uppercase mb-4" style="font-family:Rajdhani,sans-serif;color:#374151"><i class="fa-solid fa-chart-bar mr-1"></i>Slot Breakdown</p>
+          <p class="sec-lbl mb-4"><i class="fa-solid fa-chart-bar mr-1"></i>Slot Breakdown</p>
           <div id="ov-bars" class="flex items-end gap-2 h-28 mb-3"></div>
           <div id="ov-legend" class="space-y-1 text-xs"></div>
         </div>
         <div class="card p-4 sm:p-5">
-          <p class="text-xs font-black tracking-widest uppercase mb-4" style="font-family:Rajdhani,sans-serif;color:#374151"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Placement Split</p>
+          <p class="sec-lbl mb-4"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Placement Split</p>
           <div id="ov-placement" class="flex flex-col gap-3"></div>
         </div>
         <div class="card p-4 sm:p-5 sm:col-span-2 lg:col-span-1">
-          <p class="text-xs font-black tracking-widest uppercase mb-4" style="font-family:Rajdhani,sans-serif;color:#374151"><i class="fa-solid fa-flag mr-1"></i>Alliance Origin</p>
+          <p class="sec-lbl mb-4"><i class="fa-solid fa-flag mr-1"></i>Alliance Origin</p>
           <div id="ov-origin" class="flex flex-col gap-4"></div>
         </div>
       </div>
       <div class="card p-4 sm:p-5 mb-3">
-        <p class="text-xs font-black tracking-widest uppercase mb-4" style="font-family:Rajdhani,sans-serif;color:#374151"><i class="fa-solid fa-bolt mr-1"></i>Power Tiers</p>
+        <p class="sec-lbl mb-4"><i class="fa-solid fa-bolt mr-1"></i>Power Tiers</p>
         <div id="ov-tiers" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
       </div>
       <div class="card p-4 sm:p-5">
-        <p class="text-xs font-black tracking-widest uppercase mb-4" style="font-family:Rajdhani,sans-serif;color:#374151"><i class="fa-solid fa-clipboard-list mr-1"></i>Intel Summary</p>
+        <p class="sec-lbl mb-4"><i class="fa-solid fa-clipboard-list mr-1"></i>Intel Summary</p>
         <ul id="ov-actions" class="space-y-2 text-sm"></ul>
       </div>
     </div>
@@ -489,9 +551,9 @@ select.fi{cursor:pointer;appearance:none}
     <!-- ── Main Alliance ── -->
     <div id="tab-main" class="tp pt-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#f59e0b">
+        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fbbf24">
           <i class="fa-solid fa-shield-halved mr-1"></i>Main Alliance
-          <span class="text-xs font-bold ml-1" style="color:#374151" id="cnt-main"></span>
+          <span class="text-xs font-bold ml-1 sec-lbl" style="letter-spacing:.5px;text-transform:none" id="cnt-main"></span>
         </h2>
         <div class="flex gap-2 flex-wrap items-center">
           <div class="sw"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -512,9 +574,9 @@ select.fi{cursor:pointer;appearance:none}
     <!-- ── Academy ── -->
     <div id="tab-acad" class="tp pt-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#38bdf8">
+        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c">
           <i class="fa-solid fa-graduation-cap mr-1"></i>Academy
-          <span class="text-xs font-bold ml-1" style="color:#374151" id="cnt-acad"></span>
+          <span class="text-xs font-bold ml-1 sec-lbl" style="letter-spacing:.5px;text-transform:none" id="cnt-acad"></span>
         </h2>
         <div class="flex gap-2 flex-wrap items-center">
           <div class="sw"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -535,9 +597,9 @@ select.fi{cursor:pointer;appearance:none}
     <!-- ── All Players ── -->
     <div id="tab-all" class="tp pt-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#d1d5db">
+        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#e7e5e4">
           <i class="fa-solid fa-users mr-1"></i>All Players
-          <span class="text-xs font-bold ml-1" style="color:#374151" id="cnt-all"></span>
+          <span class="text-xs font-bold ml-1 sec-lbl" style="letter-spacing:.5px;text-transform:none" id="cnt-all"></span>
         </h2>
         <div class="flex gap-2 flex-wrap items-center">
           <div class="sw"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -563,7 +625,7 @@ select.fi{cursor:pointer;appearance:none}
   </div><!-- /#app -->
 </main>
 
-<!-- ════════════ MOBILE BOTTOM NAV ══════════════════════════════ -->
+<!-- ════════ MOBILE BOTTOM NAV ══════════════════════════════════ -->
 <nav class="bnav md:hidden" id="bottom-nav">
   <div class="bnav-row">
     <button class="bnav-btn active" data-tab="ov" onclick="switchTab('ov')">
@@ -575,7 +637,7 @@ select.fi{cursor:pointer;appearance:none}
       Main
     </button>
     <button class="bnav-btn" data-tab="acad" onclick="switchTab('acad')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" fill="none" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" fill="none" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
       Academy
     </button>
     <button class="bnav-btn" data-tab="all" onclick="switchTab('all')">
@@ -585,59 +647,58 @@ select.fi{cursor:pointer;appearance:none}
   </div>
 </nav>
 
-<!-- ════════════ ADMIN FAB ═══════════════════════════════════════ -->
+<!-- ════════ ADMIN FAB ═══════════════════════════════════════════ -->
 <button id="admin-fab" class="fab md:hidden hidden" onclick="openDrawer()" aria-label="Command Menu">
   <i class="fa-solid fa-sliders"></i>
 </button>
-
 <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
 
-<!-- ════════════ ADMIN DRAWER ═══════════════════════════════════ -->
+<!-- ════════ ADMIN DRAWER ════════════════════════════════════════ -->
 <div id="admin-drawer" class="drawer">
   <div class="flex items-center justify-between mb-5">
     <div>
-      <p class="font-black tracking-widest uppercase text-xs" style="font-family:Rajdhani,sans-serif;color:#f59e0b"><i class="fa-solid fa-shield-halved mr-1"></i>Command Panel</p>
-      <p class="text-xs mt-0.5" style="color:#374151;font-family:Rajdhani,sans-serif" id="drawer-email"></p>
+      <p class="sec-lbl"><i class="fa-solid fa-shield-halved mr-1"></i>Command Panel</p>
+      <p class="text-xs mt-0.5 sec-lbl font-normal normal-case tracking-normal" id="drawer-email"></p>
     </div>
-    <button onclick="closeDrawer()" class="text-xl w-10 h-10 flex items-center justify-center rounded" style="color:#374151;background:rgba(56,189,248,.05)">&times;</button>
+    <button onclick="closeDrawer()" class="text-xl w-10 h-10 flex items-center justify-center rounded" style="color:#57534e;background:rgba(245,158,11,.06)">&times;</button>
   </div>
-  <div class="space-y-2">
+  <div class="space-y-1">
     <button class="drawer-item" onclick="closeDrawer();openPlayerModal(null)">
-      <div class="drawer-icon" style="background:rgba(16,185,129,.12);color:#10b981"><i class="fa-solid fa-user-plus"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#d1d5db">Enlist Player</p><p class="text-xs font-normal normal-case" style="color:#374151">Add a new soldier to the roster</p></div>
+      <div class="drawer-icon" style="background:rgba(245,158,11,.12);color:#fbbf24"><i class="fa-solid fa-user-plus"></i></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Enlist Player</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Add a new soldier to the roster</p></div>
     </button>
     <button class="drawer-item" onclick="closeDrawer();openModal('m-csv')">
-      <div class="drawer-icon" style="background:rgba(56,189,248,.12);color:#38bdf8"><i class="fa-solid fa-file-import"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#d1d5db">Import CSV</p><p class="text-xs font-normal normal-case" style="color:#374151">Bulk-import roster from file</p></div>
+      <div class="drawer-icon" style="background:rgba(249,115,22,.12);color:#fb923c"><i class="fa-solid fa-file-import"></i></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Import CSV</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Bulk-import roster from file</p></div>
     </button>
     <button class="drawer-item" onclick="closeDrawer();doExportCSV()">
-      <div class="drawer-icon" style="background:rgba(245,158,11,.12);color:#f59e0b"><i class="fa-solid fa-file-export"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#d1d5db">Export CSV</p><p class="text-xs font-normal normal-case" style="color:#374151">Download full roster</p></div>
+      <div class="drawer-icon" style="background:rgba(251,191,36,.1);color:#fde68a"><i class="fa-solid fa-file-export"></i></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Export CSV</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Download full roster</p></div>
     </button>
     <button class="drawer-item" onclick="closeDrawer();doLogout()">
-      <div class="drawer-icon" style="background:rgba(239,68,68,.12);color:#ef4444"><i class="fa-solid fa-right-from-bracket"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#d1d5db">Logout</p><p class="text-xs font-normal normal-case" style="color:#374151">Exit command mode</p></div>
+      <div class="drawer-icon" style="background:rgba(220,38,38,.12);color:#f87171"><i class="fa-solid fa-right-from-bracket"></i></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Logout</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Exit command mode</p></div>
     </button>
   </div>
 </div>
 
-<!-- ════════════ MODALS ══════════════════════════════════════════ -->
+<!-- ════════ MODALS ══════════════════════════════════════════════ -->
 <!-- Login -->
 <div id="m-login" class="mbg" onclick="bgClick(event,'m-login')">
   <div class="mbox" style="max-width:400px">
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#f59e0b"><i class="fa-solid fa-shield-halved mr-1"></i>Authentication</h2>
-        <p class="text-xs mt-0.5" style="color:#4b5563;font-family:Rajdhani,sans-serif">Command access required</p>
+        <h2 class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fbbf24"><i class="fa-solid fa-shield-halved mr-1"></i>Authentication</h2>
+        <p class="text-xs mt-0.5 sec-lbl">Command access required</p>
       </div>
-      <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#4b5563" onclick="closeModal('m-login')">&times;</button>
+      <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-login')">&times;</button>
     </div>
     <div class="space-y-4">
       <div><label class="fl">Email</label>
         <input id="l-email" class="fi" type="email" placeholder="commander@alliance.com" autocomplete="email" inputmode="email"/></div>
       <div><label class="fl">Password</label>
         <input id="l-pass" class="fi" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
-      <div id="l-err" class="hidden text-xs rounded px-3 py-2" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#ef4444;font-family:Rajdhani,sans-serif"></div>
+      <div id="l-err" class="hidden text-xs rounded px-3 py-2" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:#f87171;font-family:Rajdhani,sans-serif"></div>
       <button id="l-btn" class="btn btn-amber w-full" onclick="doLogin()">
         <i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command
       </button>
@@ -649,8 +710,8 @@ select.fi{cursor:pointer;appearance:none}
 <div id="m-player" class="mbg" onclick="bgClick(event,'m-player')">
   <div class="mbox">
     <div class="flex items-center justify-between mb-5">
-      <h2 id="pm-title" class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#38bdf8">Enlist Player</h2>
-      <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#4b5563" onclick="closeModal('m-player')">&times;</button>
+      <h2 id="pm-title" class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c">Enlist Player</h2>
+      <button class="text-2xl w-10 h-10 flex items-center justify-content-center" style="color:#57534e" onclick="closeModal('m-player')">&times;</button>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div class="sm:col-span-2"><label class="fl">Soldier Name *</label>
@@ -675,12 +736,12 @@ select.fi{cursor:pointer;appearance:none}
           <option value="HEALTH / LEAVE">Health / Leave</option><option value="CAMEBACK NOW">Cameback Now</option>
           <option value="SMURF / FARM">Smurf / Farm</option>
         </select></div>
-      <div class="sm:col-span-2"><label class="fl">Tags <span style="color:#1f2937;font-weight:400;text-transform:none">(comma-separated)</span></label>
+      <div class="sm:col-span-2"><label class="fl">Tags <span style="color:#44403c;font-weight:400;text-transform:none">(comma-separated)</span></label>
         <input id="p-tags" class="fi" type="text" placeholder="e.g. Rally Leader, Veteran, R5" autocomplete="off"/></div>
       <div class="sm:col-span-2"><label class="fl">Field Notes</label>
         <textarea id="p-notes" class="fi" placeholder="Intel notes…"></textarea></div>
     </div>
-    <div id="pm-err" class="hidden mt-3 text-xs rounded px-3 py-2" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#ef4444;font-family:Rajdhani,sans-serif"></div>
+    <div id="pm-err" class="hidden mt-3 text-xs rounded px-3 py-2" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:#f87171;font-family:Rajdhani,sans-serif"></div>
     <div class="flex gap-3 mt-4">
       <button id="pm-save" class="btn btn-green flex-1" onclick="savePlayer()"><i class="fa-solid fa-check text-xs"></i> Confirm Enlistment</button>
       <button class="btn btn-gray" onclick="closeModal('m-player')">Cancel</button>
@@ -691,10 +752,10 @@ select.fi{cursor:pointer;appearance:none}
 <!-- Delete -->
 <div id="m-del" class="mbg" onclick="bgClick(event,'m-del')">
   <div class="mbox" style="max-width:400px">
-    <h2 class="font-black text-xl tracking-widest uppercase mb-2" style="font-family:Rajdhani,sans-serif;color:#ef4444"><i class="fa-solid fa-skull-crossbones mr-1"></i>Discharge</h2>
-    <p class="text-xs mb-1" style="color:#9ca3af;font-family:Rajdhani,sans-serif">Permanently remove from roster:</p>
-    <p class="font-black text-base mb-4 tracking-wide" style="color:#f1f5f9;font-family:Rajdhani,sans-serif" id="del-name"></p>
-    <div class="rounded px-3 py-2 text-xs mb-5" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);color:#fca5a5">
+    <h2 class="font-black text-xl tracking-widest uppercase mb-2" style="font-family:Rajdhani,sans-serif;color:#f87171"><i class="fa-solid fa-skull-crossbones mr-1"></i>Discharge</h2>
+    <p class="text-xs mb-1 sec-lbl">Permanently remove from roster:</p>
+    <p class="font-black text-base mb-4 tracking-wide" style="color:#fef3c7;font-family:Rajdhani,sans-serif" id="del-name"></p>
+    <div class="rounded px-3 py-2 text-xs mb-5" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#fca5a5">
       <i class="fa-solid fa-triangle-exclamation mr-1"></i>This action is <strong>permanent</strong> and cannot be reversed.
     </div>
     <div class="flex gap-3">
@@ -709,26 +770,26 @@ select.fi{cursor:pointer;appearance:none}
   <div class="mbox wide">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h2 class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#38bdf8"><i class="fa-solid fa-file-import mr-1"></i>Import Roster</h2>
-        <p class="text-xs mt-0.5" style="color:#4b5563;font-family:Rajdhani,sans-serif">Bulk-import or update soldiers via CSV</p>
+        <h2 class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c"><i class="fa-solid fa-file-import mr-1"></i>Import Roster</h2>
+        <p class="text-xs mt-0.5 sec-lbl">Bulk-import or update soldiers via CSV</p>
       </div>
-      <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#4b5563" onclick="closeModal('m-csv');resetCSV()">&times;</button>
+      <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-csv');resetCSV()">&times;</button>
     </div>
     <div id="csv-dz" class="dropzone mb-4" onclick="document.getElementById('csv-file').click()">
       <input type="file" id="csv-file" accept=".csv,.txt" class="hidden" onchange="onCSVFile(this.files[0])"/>
-      <i class="fa-solid fa-file-csv text-4xl mb-2" style="color:#1f2937"></i>
-      <p class="text-sm font-bold" style="color:#4b5563;font-family:Rajdhani,sans-serif">TAP TO SELECT OR DROP A CSV FILE</p>
-      <p class="text-xs mt-1" style="color:#1f2937">.csv / .txt — max 10 MB</p>
+      <i class="fa-solid fa-file-csv text-4xl mb-2" style="color:#44403c"></i>
+      <p class="text-sm font-bold sec-lbl">TAP TO SELECT OR DROP A CSV FILE</p>
+      <p class="text-xs mt-1" style="color:#292524">.csv / .txt — max 10 MB</p>
     </div>
     <div id="csv-map-wrap" class="hidden mb-4">
-      <p class="text-xs font-black tracking-widest uppercase mb-3" style="font-family:Rajdhani,sans-serif;color:#4b5563">Column Mapping</p>
+      <p class="sec-lbl mb-3">Column Mapping</p>
       <div id="csv-map-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
     </div>
     <div id="csv-prev-wrap" class="hidden mb-4">
-      <p class="text-xs font-black tracking-widest uppercase mb-2" style="font-family:Rajdhani,sans-serif;color:#4b5563">Preview (5 rows)</p>
+      <p class="sec-lbl mb-2">Preview (5 rows)</p>
       <div class="tw card"><div id="csv-prev-tbl"></div></div>
     </div>
-    <p id="csv-stats" class="hidden text-xs mb-3" style="color:#374151;font-family:Rajdhani,sans-serif"></p>
+    <p id="csv-stats" class="hidden text-xs mb-3 sec-lbl"></p>
     <div class="flex gap-3">
       <button id="csv-go" class="btn btn-green hidden flex-1" onclick="doImport()"><i class="fa-solid fa-file-import text-xs"></i> Deploy to Supabase</button>
       <button class="btn btn-gray" onclick="closeModal('m-csv');resetCSV()">Abort</button>
@@ -738,107 +799,82 @@ select.fi{cursor:pointer;appearance:none}
 
 <div id="toast"></div>
 
-<!-- ════════════ JAVASCRIPT ══════════════════════════════════════ -->
+<!-- ════════ JAVASCRIPT ══════════════════════════════════════════ -->
 <script>
 'use strict';
 
-/* ── Supabase ──────────────────────────────────────────────────── */
 const SUPA_URL = 'https://phnaotocpdlrceljjqwp.supabase.co';
 const SUPA_KEY = 'sb_publishable_9RZr4WnwL2iuv80z1Avfow_deTXvkRJ';
 const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-/* ── State ─────────────────────────────────────────────────────── */
 const S = {
-  players:[], isAdmin:false, user:null,
-  editingId:null, delTarget:null,
-  sort:{ main:{col:'power',dir:-1}, acad:{col:'power',dir:-1}, all:{col:'power',dir:-1} },
-  filters:{ main:{q:'',origin:''}, acad:{q:'',origin:''}, all:{q:'',placement:'',origin:''} },
+  players:[],isAdmin:false,user:null,
+  editingId:null,delTarget:null,
+  sort:{main:{col:'power',dir:-1},acad:{col:'power',dir:-1},all:{col:'power',dir:-1}},
+  filters:{main:{q:'',origin:''},acad:{q:'',origin:''},all:{q:'',placement:'',origin:''}},
 };
 
-/* ════════════════════════════════════════════════════════════════
-   POWER FORMATTING  —  M / B
-════════════════════════════════════════════════════════════════ */
-function fmtPow(val) {
-  var n = parseFloat(val) || 0;
-  if (n <= 0) return '0M';
-  if (n >= 1000) {
-    var s = (n/1000).toFixed(2).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
-    return s + 'B';
-  }
-  var s = n.toFixed(1);
-  if (s.endsWith('.0')) s = s.slice(0,-2);
-  return s + 'M';
+/* ── Power formatting ───────────────────────────────────────────── */
+function fmtPow(val){
+  var n=parseFloat(val)||0;
+  if(n<=0) return '0M';
+  if(n>=1000){var s=(n/1000).toFixed(2).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');return s+'B';}
+  var s=n.toFixed(1);if(s.endsWith('.0'))s=s.slice(0,-2);return s+'M';
+}
+function powClass(n){
+  var v=parseFloat(n)||0;
+  if(v>=1000)return 'pow-b';if(v>=500)return 'pow-hi';if(v>=100)return 'pow-md';return 'pow-lo';
+}
+function tcClass(n){
+  var v=parseInt(n)||0;
+  if(v>=30)return 'tc-hi';if(v>=25)return 'tc-md';if(v>=20)return 'tc-lo';return 'tc-vl';
 }
 
-function powClass(n) {
-  var v = parseFloat(n)||0;
-  if (v >= 1000) return 'pow-b';
-  if (v >= 500)  return 'pow-hi';
-  if (v >= 100)  return 'pow-md';
-  return 'pow-lo';
-}
-
-function tcClass(n) {
-  var v = parseInt(n)||0;
-  if (v >= 30) return 'tc-hi';
-  if (v >= 25) return 'tc-md';
-  if (v >= 20) return 'tc-lo';
-  return 'tc-vl';
-}
-
-/* ── Payload sanitiser ─────────────────────────────────────────── */
-function sanitisePayload(raw) {
+/* ── Payload sanitiser ──────────────────────────────────────────── */
+function sanitisePayload(raw){
   var COLS=['name','origin','rank','power','tc','placement','flag','tags','notes'];
   var out={};
   COLS.forEach(function(k){
-    if(!(k in raw)) return;
+    if(!(k in raw))return;
     var v=raw[k];
-    if(k==='power'){out[k]=parseFloat(v)||0; return;}
-    if(k==='tc')   {out[k]=parseInt(v,10)||0; return;}
+    if(k==='power'){out[k]=parseFloat(v)||0;return;}
+    if(k==='tc')  {out[k]=parseInt(v,10)||0;return;}
     out[k]=(v===null||v===undefined)?'':String(v).trim();
   });
   return out;
 }
 
-/* ── DB error formatter ────────────────────────────────────────── */
-function fmtDbError(err) {
+function fmtDbError(err){
   var msg=(err&&err.message)?err.message:String(err);
-  if(msg.toLowerCase().includes('schema cache'))
-    return 'Schema mismatch: check all 9 columns exist: name, origin, rank, power, tc, placement, flag, tags, notes.';
-  if(msg.includes('not-null constraint'))
-    return 'Required field missing. Ensure Player Name is filled in.';
-  if(msg.includes('duplicate key value'))
-    return 'A soldier with this name already exists in the database.';
+  if(msg.toLowerCase().includes('schema cache')) return 'Schema mismatch: verify 9 columns exist.';
+  if(msg.includes('not-null constraint')) return 'Required field missing — Soldier Name is required.';
+  if(msg.includes('duplicate key value')) return 'A soldier with this name already exists.';
   if(msg.toLowerCase().includes('no unique')||msg.toLowerCase().includes('on conflict'))
-    return 'Upsert failed: add UNIQUE constraint → ALTER TABLE players ADD CONSTRAINT players_name_unique UNIQUE (name);';
+    return 'Upsert failed: ALTER TABLE players ADD CONSTRAINT players_name_unique UNIQUE (name);';
   return msg;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   AUTH
-════════════════════════════════════════════════════════════════ */
-async function doLogin() {
+/* ── Auth ───────────────────────────────────────────────────────── */
+async function doLogin(){
   var email=document.getElementById('l-email').value.trim();
   var pass =document.getElementById('l-pass').value;
   var errEl=document.getElementById('l-err');
   var btn  =document.getElementById('l-btn');
-  if(!email||!pass){showEl('l-err','Fill in both fields to proceed.'); return;}
-  btn.disabled=true; btn.textContent='Authenticating…'; errEl.classList.add('hidden');
+  if(!email||!pass){showEl('l-err','Fill in both fields to proceed.');return;}
+  btn.disabled=true;btn.textContent='Authenticating…';errEl.classList.add('hidden');
   var {error}=await sb.auth.signInWithPassword({email,password:pass});
   btn.disabled=false;
   btn.innerHTML='<i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command';
-  if(error){showEl('l-err',error.message); return;}
+  if(error){showEl('l-err',error.message);return;}
   closeModal('m-login');
-  document.getElementById('l-email').value='';
-  document.getElementById('l-pass').value='';
+  document.getElementById('l-email').value='';document.getElementById('l-pass').value='';
   toast('Welcome back, Commander!','success');
 }
-async function doLogout(){await sb.auth.signOut(); toast('Signed out.','info');}
-
+async function doLogout(){await sb.auth.signOut();toast('Signed out.','info');}
 function showEl(id,msg){var el=document.getElementById(id);el.textContent=msg;el.classList.remove('hidden');}
 
 function applyAuthState(user){
-  S.user=user; S.isAdmin=!!user;
+  S.user=user;S.isAdmin=!!user;
   document.getElementById('btn-login').classList.toggle('hidden',S.isAdmin);
   document.getElementById('btn-logout').classList.toggle('hidden',!S.isAdmin);
   document.getElementById('admin-bar').classList.toggle('hidden',!S.isAdmin);
@@ -846,24 +882,20 @@ function applyAuthState(user){
   var ub=document.getElementById('usr-bar');
   var mb=document.getElementById('admin-badge-mobile');
   if(S.isAdmin&&user){
-    ub.style.display='flex'; mb.classList.remove('hidden');
+    ub.style.display='flex';mb.classList.remove('hidden');
     document.getElementById('usr-email').textContent=user.email;
     document.getElementById('admin-email-bar').textContent=user.email;
     document.getElementById('drawer-email').textContent=user.email;
-  } else {
-    ub.style.display='none'; mb.classList.add('hidden');
-  }
+  } else {ub.style.display='none';mb.classList.add('hidden');}
   renderAll();
 }
 
-/* ════════════════════════════════════════════════════════════════
-   DATABASE
-════════════════════════════════════════════════════════════════ */
+/* ── Database ───────────────────────────────────────────────────── */
 async function fetchPlayers(){
   setDbStatus('loading');
   var {data,error}=await sb.from('players').select('*').order('power',{ascending:false});
-  if(error){setDbStatus('error'); throw error;}
-  S.players=data||[]; setDbStatus('ok');
+  if(error){setDbStatus('error');throw error;}
+  S.players=data||[];setDbStatus('ok');
 }
 async function dbCreate(payload){
   var clean=sanitisePayload(payload);
@@ -883,16 +915,14 @@ async function dbDelete(id){
 }
 async function quickPlace(id,placement){
   var {error}=await sb.from('players').update({placement:String(placement)}).eq('id',id);
-  if(error){toast('Transfer failed: '+fmtDbError(error),'error'); return;}
+  if(error){toast('Transfer failed: '+fmtDbError(error),'error');return;}
   var p=S.players.find(function(x){return x.id===id;});
   if(p) p.placement=placement;
   renderAll();
-  toast((p?p.name:'Player')+' → '+(placement==='MAIN ALLIANCE'?'Main Alliance':'Academy'),'success');
+  toast((p?p.name:'Player')+' \u2192 '+(placement==='MAIN ALLIANCE'?'Main Alliance':'Academy'),'success');
 }
 
-/* ════════════════════════════════════════════════════════════════
-   PLAYER MODAL
-════════════════════════════════════════════════════════════════ */
+/* ── Player modal ───────────────────────────────────────────────── */
 function openPlayerModal(player){
   S.editingId=player?player.id:null;
   document.getElementById('pm-title').textContent=player?'Edit Soldier':'Enlist Player';
@@ -911,32 +941,28 @@ function openPlayerModal(player){
 }
 async function savePlayer(){
   var name=document.getElementById('p-name').value.trim();
-  if(!name){showEl('pm-err','Callsign is required.'); return;}
+  if(!name){showEl('pm-err','Callsign is required.');return;}
   var payload={
-    name,
-    origin:   document.getElementById('p-origin').value,
-    rank:     document.getElementById('p-rank').value,
-    power:    parseFloat(document.getElementById('p-power').value)||0,
-    tc:       parseInt(document.getElementById('p-tc').value,10)||0,
-    placement:document.getElementById('p-place').value,
-    flag:     document.getElementById('p-flag').value,
-    tags:     document.getElementById('p-tags').value.trim(),
-    notes:    document.getElementById('p-notes').value.trim(),
+    name,origin:document.getElementById('p-origin').value,rank:document.getElementById('p-rank').value,
+    power:parseFloat(document.getElementById('p-power').value)||0,
+    tc:parseInt(document.getElementById('p-tc').value,10)||0,
+    placement:document.getElementById('p-place').value,flag:document.getElementById('p-flag').value,
+    tags:document.getElementById('p-tags').value.trim(),notes:document.getElementById('p-notes').value.trim(),
   };
   var btn=document.getElementById('pm-save');
-  btn.disabled=true; btn.textContent='Deploying…';
-  try {
+  btn.disabled=true;btn.textContent='Deploying\u2026';
+  try{
     if(S.editingId){
       var updated=await dbUpdate(S.editingId,payload);
       var idx=S.players.findIndex(function(p){return p.id===S.editingId;});
-      if(idx!==-1) S.players[idx]=Object.assign({},S.players[idx],updated);
+      if(idx!==-1)S.players[idx]=Object.assign({},S.players[idx],updated);
       toast(name+' updated!','success');
     } else {
       var created=await dbCreate(payload);
       S.players.unshift(created);
       toast(name+' enlisted!','success');
     }
-    closeModal('m-player'); renderAll();
+    closeModal('m-player');renderAll();
   } catch(err){showEl('pm-err',err.message);}
   finally{
     btn.disabled=false;
@@ -944,23 +970,21 @@ async function savePlayer(){
   }
 }
 
-/* ════════════════════════════════════════════════════════════════
-   DELETE
-════════════════════════════════════════════════════════════════ */
+/* ── Delete modal ───────────────────────────────────────────────── */
 function openDeleteModal(player){
   S.delTarget=player;
   document.getElementById('del-name').textContent=player.name;
   openModal('m-del');
 }
 async function confirmDelete(){
-  if(!S.delTarget) return;
+  if(!S.delTarget)return;
   var btn=document.getElementById('del-btn');
-  btn.disabled=true; btn.textContent='Discharging…';
-  try {
+  btn.disabled=true;btn.textContent='Discharging\u2026';
+  try{
     await dbDelete(S.delTarget.id);
     S.players=S.players.filter(function(p){return p.id!==S.delTarget.id;});
     toast(S.delTarget.name+' discharged.','info');
-    closeModal('m-del'); renderAll();
+    closeModal('m-del');renderAll();
   } catch(err){toast('Failed: '+err.message,'error');}
   finally{
     btn.disabled=false;
@@ -969,9 +993,7 @@ async function confirmDelete(){
   }
 }
 
-/* ════════════════════════════════════════════════════════════════
-   CSV EXPORT
-════════════════════════════════════════════════════════════════ */
+/* ── CSV Export ─────────────────────────────────────────────────── */
 function doExportCSV(subset){
   var rows=(subset||S.players).map(function(p){
     return{Name:p.name||'',Origin:p.origin||'',Rank:p.rank||'',
@@ -983,14 +1005,12 @@ function doExportCSV(subset){
 }
 function exportTabCSV(placement){doExportCSV(S.players.filter(function(p){return p.placement===placement;}));}
 
-/* ════════════════════════════════════════════════════════════════
-   CSV IMPORT
-════════════════════════════════════════════════════════════════ */
+/* ── CSV Import ─────────────────────────────────────────────────── */
 var _csvRows=[],_csvFields=[],_csvMap={};
 var DB_FIELDS=['name','origin','rank','power','tc','placement','flag','tags','notes'];
 
 function onCSVFile(file){
-  if(!file) return;
+  if(!file)return;
   Papa.parse(file,{header:true,skipEmptyLines:true,
     complete:function(res){_csvRows=res.data;_csvFields=res.meta.fields||[];autoMap();renderCSVPreview();},
     error:function(e){toast('Parse error: '+e.message,'error');}
@@ -1000,8 +1020,7 @@ function autoMap(){
   _csvMap={};
   DB_FIELDS.forEach(function(field){
     var match=_csvFields.find(function(h){
-      var hl=h.toLowerCase().replace(/[^a-z0-9]/g,'');
-      var fl=field.toLowerCase();
+      var hl=h.toLowerCase().replace(/[^a-z0-9]/g,'');var fl=field.toLowerCase();
       return hl===fl||hl.startsWith(fl)||fl.startsWith(hl);
     });
     if(match) _csvMap[field]=match;
@@ -1019,12 +1038,12 @@ function renderCSVPreview(){
   document.getElementById('csv-prev-tbl').innerHTML=
     '<table style="width:100%;border-collapse:collapse;font-size:.72rem">'+
     '<thead><tr>'+_csvFields.map(function(h){
-      return '<th style="background:rgba(4,5,10,.9);color:#4b5563;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(245,158,11,.12);white-space:nowrap;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.8px;text-transform:uppercase">'+esc(h)+'</th>';
+      return '<th style="background:rgba(10,8,7,.95);color:#57534e;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(245,158,11,.15);white-space:nowrap;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.8px;text-transform:uppercase">'+esc(h)+'</th>';
     }).join('')+'</tr></thead><tbody>'+
     preview.map(function(row){
-      return '<tr style="border-bottom:1px solid rgba(56,189,248,.04)">'+
+      return '<tr style="border-bottom:1px solid rgba(245,158,11,.05)">'+
         _csvFields.map(function(h){
-          return '<td style="padding:5px 10px;color:#9ca3af;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(String(row[h]||''))+'</td>';
+          return '<td style="padding:5px 10px;color:#a8a29e;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(String(row[h]||''))+'</td>';
         }).join('')+'</tr>';
     }).join('')+'</tbody></table>';
   document.getElementById('csv-stats').textContent=_csvRows.length+' rows detected.';
@@ -1036,25 +1055,23 @@ async function doImport(){
     var m=_csvMap;
     function cell(f){return m[f]?String(row[m[f]]||'').trim():'';}
     return{
-      name:     cell('name'),
-      origin:   cell('origin')||'TEA',
-      rank:     cell('rank')||'R3',
-      power:    parseFloat(cell('power').replace(/[^0-9.]/g,''))||0,
-      tc:       parseInt(cell('tc').replace(/[^0-9]/g,''),10)||0,
+      name:cell('name'),origin:cell('origin')||'TEA',rank:cell('rank')||'R3',
+      power:parseFloat(cell('power').replace(/[^0-9.]/g,''))||0,
+      tc:parseInt(cell('tc').replace(/[^0-9]/g,''),10)||0,
       placement:cell('placement')||'MAIN ALLIANCE',
-      flag:     cell('flag'),tags:cell('tags'),notes:cell('notes'),
+      flag:cell('flag'),tags:cell('tags'),notes:cell('notes'),
     };
   });
   var records=rawRecords.map(sanitisePayload).filter(function(r){return r.name&&r.name.length>0;});
-  if(!records.length){toast('No valid rows. Map the "name" column.','warn'); return;}
+  if(!records.length){toast('No valid rows. Map the "name" column.','warn');return;}
   var btn=document.getElementById('csv-go');
-  btn.disabled=true; btn.textContent='Deploying '+records.length+' soldiers…';
-  try {
+  btn.disabled=true;btn.textContent='Deploying '+records.length+' soldiers\u2026';
+  try{
     var {error}=await sb.from('players').upsert(records,{onConflict:'name'});
     if(error) throw new Error(fmtDbError(error));
     toast(records.length+' soldiers deployed!','success');
-    closeModal('m-csv'); resetCSV();
-    await fetchPlayers(); renderAll();
+    closeModal('m-csv');resetCSV();
+    await fetchPlayers();renderAll();
   } catch(err){
     toast('Import failed: '+(err.message||String(err)),'error');
     console.error('[doImport]',err);
@@ -1071,7 +1088,7 @@ function resetCSV(){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   KPI CARDS — War Room Intel
+   KPI CARDS — War Room Intel (Northern Lords palette)
 ════════════════════════════════════════════════════════════════ */
 function renderKPI(){
   var ps=S.players;
@@ -1088,43 +1105,55 @@ function renderKPI(){
   var kpis=[
     {l:'PERSONNEL', v:ps.length,
      sub:tea.length+' TEA &bull; '+onx.length+' ONX',
-     icon:'fa-users', ic:'#38bdf8', ib:'rgba(56,189,248,.12)', bar:'#38bdf8',
-     vc:'#38bdf8', glow:'0 0 30px rgba(56,189,248,.06)'},
+     icon:'fa-users',
+     ic:'#fb923c',ib:'rgba(249,115,22,.15)',
+     bar:'linear-gradient(90deg,#f97316,#fb923c)',
+     vc:'#fef3c7',glow:'0 0 30px rgba(249,115,22,.07)'},
     {l:'MAIN ALLIANCE', v:main.length,
      sub:'Avg '+fmtPow(mAvg)+' &bull; '+fmtPow(mTot),
-     icon:'fa-shield-halved', ic:'#f59e0b', ib:'rgba(245,158,11,.12)', bar:'#f59e0b',
-     vc:'#f59e0b', glow:'0 0 30px rgba(245,158,11,.06)'},
+     icon:'fa-shield-halved',
+     ic:'#fbbf24',ib:'rgba(251,191,36,.15)',
+     bar:'linear-gradient(90deg,#fbbf24,#f59e0b)',
+     vc:'#fef3c7',glow:'0 0 30px rgba(251,191,36,.07)'},
     {l:'ACADEMY', v:acad.length,
      sub:'Avg '+fmtPow(aAvg)+' &bull; '+fmtPow(aTot),
-     icon:'fa-graduation-cap', ic:'#38bdf8', ib:'rgba(56,189,248,.1)', bar:'#38bdf8',
-     vc:'#60a5fa', glow:'0 0 30px rgba(56,189,248,.05)'},
+     icon:'fa-graduation-cap',
+     ic:'#f97316',ib:'rgba(249,115,22,.12)',
+     bar:'linear-gradient(90deg,#f97316,#fbbf24)',
+     vc:'#fef3c7',glow:'0 0 30px rgba(249,115,22,.05)'},
     {l:'TEA FORCES', v:tea.length,
      sub:tea.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length+' main &bull; '+
          tea.filter(function(p){return p.placement==='ACADEMY';}).length+' acad',
-     icon:'fa-chess-rook', ic:'#38bdf8', ib:'rgba(56,189,248,.1)', bar:'linear-gradient(90deg,#38bdf8,#0ea5e9)',
-     vc:'#38bdf8', glow:'0 0 30px rgba(56,189,248,.05)'},
+     icon:'fa-chess-rook',
+     ic:'#fb923c',ib:'rgba(249,115,22,.12)',
+     bar:'linear-gradient(90deg,#f97316,#ea580c)',
+     vc:'#fef3c7',glow:'0 0 30px rgba(249,115,22,.05)'},
     {l:'ONX FORCES', v:onx.length,
      sub:onx.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length+' main &bull; '+
          onx.filter(function(p){return p.placement==='ACADEMY';}).length+' acad',
-     icon:'fa-dragon', ic:'#a78bfa', ib:'rgba(139,92,246,.1)', bar:'linear-gradient(90deg,#a78bfa,#7c3aed)',
-     vc:'#a78bfa', glow:'0 0 30px rgba(139,92,246,.06)'},
+     icon:'fa-dragon',
+     ic:'#f97316',ib:'rgba(234,88,12,.15)',
+     bar:'linear-gradient(90deg,#ea580c,#f97316)',
+     vc:'#fef3c7',glow:'0 0 30px rgba(234,88,12,.07)'},
     {l:'TOTAL POWER', v:fmtPow(total),
      sub:'Combined roster',
-     icon:'fa-bolt', ic:'#10b981', ib:'rgba(16,185,129,.1)', bar:'linear-gradient(90deg,#10b981,#059669)',
-     vc:'#10b981', glow:'0 0 30px rgba(16,185,129,.06)'},
+     icon:'fa-bolt',
+     ic:'#fbbf24',ib:'rgba(245,158,11,.15)',
+     bar:'linear-gradient(90deg,#f59e0b,#fbbf24)',
+     vc:'#fef3c7',glow:'0 0 30px rgba(245,158,11,.07)'},
   ];
 
   document.getElementById('kpi').innerHTML=kpis.map(function(k){
-    return '<div class="card p-3 sm:p-4" style="box-shadow:'+k.glow+'">' +
+    return '<div class="card p-3 sm:p-4" style="box-shadow:0 6px 24px rgba(0,0,0,.65),inset 0 1px 0 rgba(251,191,36,.07),'+k.glow+'">' +
       '<div class="kbar mb-3" style="background:'+k.bar+'"></div>' +
       '<div class="flex items-start gap-3">' +
-        '<div class="flex-shrink-0 w-9 h-9 rounded flex items-center justify-center text-sm" style="background:'+k.ib+';color:'+k.ic+'">'+
+        '<div class="flex-shrink-0 w-9 h-9 rounded flex items-center justify-center text-sm border" style="background:'+k.ib+';color:'+k.ic+';border-color:rgba(245,158,11,.2)">'+
           '<i class="fa-solid '+k.icon+'"></i>' +
         '</div>' +
         '<div class="min-w-0">' +
-          '<div class="font-black text-xl sm:text-2xl leading-none mb-0.5" style="font-family:Rajdhani,sans-serif;color:'+k.vc+'">'+k.v+'</div>'+
-          '<p class="text-xs font-black tracking-widest uppercase leading-tight" style="font-family:Rajdhani,sans-serif;color:#374151">'+k.l+'</p>'+
-          '<p class="text-xs leading-tight mt-0.5 truncate" style="color:#1f2937">'+k.sub+'</p>'+
+          '<div class="font-black text-2xl sm:text-3xl leading-none mb-0.5" style="font-family:Rajdhani,sans-serif;color:'+k.vc+'">'+k.v+'</div>'+
+          '<p class="sec-lbl leading-tight" style="font-size:.62rem">'+k.l+'</p>'+
+          '<p class="text-xs leading-tight mt-0.5 truncate" style="color:#44403c">'+k.sub+'</p>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -1132,7 +1161,7 @@ function renderKPI(){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   OVERVIEW
+   OVERVIEW — bright forge fills for charts
 ════════════════════════════════════════════════════════════════ */
 function renderOverview(){
   var ps=S.players;
@@ -1142,101 +1171,109 @@ function renderOverview(){
   var onx =ps.filter(function(p){return p.origin==='ONX';});
   var CAP=120;
 
+  /* Bar chart — bright amber-to-copper gradient fills */
   var bars=[
-    {l:'Main Alliance',v:main.length,c:'rgba(245,158,11,.8)'},
-    {l:'Academy',      v:acad.length,c:'rgba(56,189,248,.7)'},
-    {l:'TEA',          v:tea.length, c:'rgba(56,189,248,.5)'},
-    {l:'ONX',          v:onx.length, c:'rgba(139,92,246,.7)'},
+    {l:'Main',v:main.length,c:'linear-gradient(180deg,#fbbf24 0%,#f97316 100%)'},
+    {l:'Academy',v:acad.length,c:'linear-gradient(180deg,#f97316 0%,#ea580c 100%)'},
+    {l:'TEA',v:tea.length,c:'linear-gradient(180deg,#fb923c 0%,#f97316 100%)'},
+    {l:'ONX',v:onx.length,c:'linear-gradient(180deg,#f59e0b 0%,#d97706 100%)'},
   ];
   document.getElementById('ov-bars').innerHTML=bars.map(function(b){
-    var h=Math.max(Math.round(b.v/CAP*96),3);
+    var h=Math.max(Math.round(b.v/CAP*96),4);
     return '<div class="flex flex-col items-center gap-1 flex-1">'+
-      '<span class="text-xs font-bold" style="color:#9ca3af;font-family:Rajdhani,sans-serif">'+b.v+'</span>'+
-      '<div class="w-full rounded-t" style="height:'+h+'px;background:'+b.c+'"></div></div>';
+      '<span style="color:#a8a29e;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem">'+b.v+'</span>'+
+      '<div class="w-full rounded-t" style="height:'+h+'px;background:'+b.c+';box-shadow:0 0 10px rgba(245,158,11,.25)"></div></div>';
   }).join('');
   document.getElementById('ov-legend').innerHTML=bars.map(function(b){
-    return '<div class="flex items-center gap-2"><span class="dot" style="background:'+b.c+'"></span>'+
-      '<span style="color:#4b5563;font-family:Rajdhani,sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px">'+b.l+': <span style="color:#9ca3af">'+b.v+'</span></span></div>';
+    return '<div class="flex items-center gap-2">'+
+      '<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:'+b.c+'"></div>'+
+      '<span class="sec-lbl" style="font-size:.68rem;letter-spacing:.5px">'+b.l+': <span style="color:#a8a29e">'+b.v+'</span></span></div>';
   }).join('');
 
+  /* Placement bars — bright ember-to-gold gradient fills */
   document.getElementById('ov-placement').innerHTML=[
-    {l:'Main Alliance',cnt:main.length,tot:main.reduce(function(s,p){return s+(p.power||0);},0),c:'rgba(245,158,11,.8)',tc:'#f59e0b'},
-    {l:'Academy',      cnt:acad.length,tot:acad.reduce(function(s,p){return s+(p.power||0);},0),c:'rgba(56,189,248,.7)', tc:'#38bdf8'},
+    {l:'Main Alliance',cnt:main.length,tot:main.reduce(function(s,p){return s+(p.power||0);},0),
+     bg:'linear-gradient(90deg,#f97316,#fbbf24)',tc:'#fbbf24'},
+    {l:'Academy',cnt:acad.length,tot:acad.reduce(function(s,p){return s+(p.power||0);},0),
+     bg:'linear-gradient(90deg,#ea580c,#f97316)',tc:'#fb923c'},
   ].map(function(g){
     var pct=ps.length?Math.round(g.cnt/ps.length*100):0;
     return '<div>'+
       '<div class="flex justify-between mb-1" style="font-size:.72rem">'+
-        '<span style="color:#6b7280;font-family:Rajdhani,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.5px">'+g.l+'</span>'+
+        '<span class="sec-lbl" style="letter-spacing:.5px">'+g.l+'</span>'+
         '<span style="color:'+g.tc+';font-family:Rajdhani,sans-serif;font-weight:800">'+g.cnt+' &bull; '+fmtPow(g.tot)+' ('+pct+'%)</span>'+
       '</div>'+
-      '<div class="pb"><div class="pf" style="width:'+pct+'%;background:'+g.c+'"></div></div></div>';
+      '<div class="pb"><div class="pf" style="width:'+pct+'%;background:'+g.bg+'"></div></div></div>';
   }).join('')+
-  '<div class="pt-2 text-xs" style="color:#1f2937;font-family:Rajdhani,sans-serif;border-top:1px solid rgba(56,189,248,.05);margin-top:6px">TOTAL PERSONNEL: <span style="color:#6b7280">'+ps.length+'</span></div>';
+  '<div class="pt-2 text-xs sec-lbl" style="border-top:1px solid rgba(245,158,11,.08);margin-top:6px">TOTAL: <span style="color:#a8a29e">'+ps.length+' soldiers</span></div>';
 
+  /* Origin breakdown */
   document.getElementById('ov-origin').innerHTML=[
     {l:'TEA',cnt:tea.length,pow:tea.reduce(function(s,p){return s+(p.power||0);},0),
      main:tea.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length,
      acad:tea.filter(function(p){return p.placement==='ACADEMY';}).length,
-     tc:'#38bdf8',dc:'rgba(56,189,248,.7)'},
+     tc:'#fb923c',dot:'rgba(249,115,22,.8)'},
     {l:'ONX',cnt:onx.length,pow:onx.reduce(function(s,p){return s+(p.power||0);},0),
      main:onx.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length,
      acad:onx.filter(function(p){return p.placement==='ACADEMY';}).length,
-     tc:'#a78bfa',dc:'rgba(139,92,246,.7)'},
+     tc:'#f59e0b',dot:'rgba(234,88,12,.8)'},
   ].map(function(o){
-    return '<div class="flex items-center justify-between">'+
-      '<div class="flex items-center gap-2"><span class="dot" style="background:'+o.dc+'"></span>'+
-        '<span style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.85rem;color:#9ca3af;letter-spacing:1px">'+o.l+'</span></div>'+
+    return '<div class="flex items-center justify-between py-1" style="border-bottom:1px solid rgba(245,158,11,.06)">'+
+      '<div class="flex items-center gap-2"><div class="dot" style="background:'+o.dot+'"></div>'+
+        '<span style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.88rem;color:#e7e5e4;letter-spacing:1px">'+o.l+'</span></div>'+
       '<div class="text-right">'+
         '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.9rem;color:'+o.tc+'">'+o.cnt+' &bull; '+fmtPow(o.pow)+'</div>'+
-        '<div style="font-size:.65rem;color:#374151;font-family:Rajdhani,sans-serif;text-transform:uppercase;letter-spacing:.4px">'+o.main+' MAIN &bull; '+o.acad+' ACAD</div>'+
+        '<div class="sec-lbl" style="font-size:.62rem;letter-spacing:.4px">'+o.main+' MAIN &bull; '+o.acad+' ACAD</div>'+
       '</div></div>';
   }).join('');
 
+  /* Power tiers — vivid bordered tiles */
   var tiers=[
-    {l:'1B+',    min:1000,max:1e9,  c:'#38bdf8',b:'rgba(56,189,248,.18)',  bg:'rgba(56,189,248,.04)'},
-    {l:'100M+',  min:100, max:1000, c:'#f59e0b',b:'rgba(245,158,11,.18)',  bg:'rgba(245,158,11,.04)'},
-    {l:'50–99M', min:50,  max:100,  c:'#10b981',b:'rgba(16,185,129,.18)',  bg:'rgba(16,185,129,.04)'},
-    {l:'< 50M',  min:0,   max:50,   c:'#ef4444',b:'rgba(239,68,68,.18)',   bg:'rgba(239,68,68,.04)'},
+    {l:'1B+',    min:1000,max:1e9,  c:'#fb923c',b:'rgba(249,115,22,.45)',bg:'rgba(249,115,22,.08)'},
+    {l:'100M+',  min:100, max:1000, c:'#fbbf24',b:'rgba(251,191,36,.45)',bg:'rgba(251,191,36,.07)'},
+    {l:'50–99M', min:50,  max:100,  c:'#f59e0b',b:'rgba(245,158,11,.4)', bg:'rgba(245,158,11,.06)'},
+    {l:'< 50M',  min:0,   max:50,   c:'#f87171',b:'rgba(220,38,38,.4)',  bg:'rgba(220,38,38,.06)'},
   ];
   document.getElementById('ov-tiers').innerHTML=tiers.map(function(t){
     var cnt=ps.filter(function(p){return p.power>=t.min&&p.power<t.max;}).length;
-    return '<div class="rounded p-3" style="border:1px solid '+t.b+';background:'+t.bg+'">'+
-      '<div class="font-black text-2xl" style="font-family:Rajdhani,sans-serif;color:'+t.c+'">'+cnt+'</div>'+
-      '<div class="text-xs mt-1" style="color:#374151;font-family:Rajdhani,sans-serif;text-transform:uppercase;letter-spacing:.5px;font-weight:700">'+t.l+'</div></div>';
+    return '<div class="rounded-md p-3" style="border:1px solid '+t.b+';background:'+t.bg+'">'+
+      '<div class="font-black text-3xl" style="font-family:Rajdhani,sans-serif;color:'+t.c+'">'+cnt+'</div>'+
+      '<div class="sec-lbl mt-1" style="font-size:.65rem;letter-spacing:.5px">'+t.l+'</div></div>';
   }).join('');
 
+  /* Intel summary */
   var actions=[
-    '<strong style="color:#f59e0b">'+main.length+'</strong> in Main Alliance &bull; <strong style="color:#38bdf8">'+acad.length+'</strong> in Academy',
-    '<strong style="color:#10b981">'+fmtPow(ps.reduce(function(s,p){return s+(p.power||0);},0))+'</strong> combined battle power',
-    '<strong style="color:#f59e0b">'+ps.filter(function(p){return p.flag==='EVALUATE';}).length+'</strong> soldiers flagged for evaluation',
-    '<strong style="color:#ef4444">'+ps.filter(function(p){return p.flag==='INACTIVE';}).length+'</strong> soldiers marked inactive',
-    '<strong style="color:#a78bfa">'+ps.filter(function(p){return p.flag==='PENDING MOVE';}).length+'</strong> with pending transfer orders',
+    '<strong style="color:#fbbf24">'+main.length+'</strong> in Main Alliance &bull; <strong style="color:#fb923c">'+acad.length+'</strong> in Academy',
+    '<strong style="color:#f59e0b">'+fmtPow(ps.reduce(function(s,p){return s+(p.power||0);},0))+'</strong> combined battle power',
+    '<strong style="color:#fbbf24">'+ps.filter(function(p){return p.flag==='EVALUATE';}).length+'</strong> soldiers flagged for evaluation',
+    '<strong style="color:#f87171">'+ps.filter(function(p){return p.flag==='INACTIVE';}).length+'</strong> soldiers marked inactive',
+    '<strong style="color:#fb923c">'+ps.filter(function(p){return p.flag==='PENDING MOVE';}).length+'</strong> with pending transfer orders',
   ];
   document.getElementById('ov-actions').innerHTML=actions.map(function(a){
-    return '<li style="border-left:2px solid rgba(245,158,11,.25);padding-left:10px;padding-top:2px;padding-bottom:2px;color:#6b7280;font-size:.82rem">'+a+'</li>';
+    return '<li style="border-left:2px solid rgba(245,158,11,.3);padding-left:10px;padding-top:2px;padding-bottom:2px;color:#78716c;font-size:.82rem">'+a+'</li>';
   }).join('');
 }
 
 /* ════════════════════════════════════════════════════════════════
-   BADGE HELPERS — Military style
+   BADGES — Northern Lords forged-iron style
 ════════════════════════════════════════════════════════════════ */
 function originBadge(o){
   return o==='TEA'
-    ?'<span class="badge b-cyan" style="letter-spacing:2px;box-shadow:0 0 8px rgba(56,189,248,.15)">TEA</span>'
-    :'<span class="badge b-purple" style="letter-spacing:2px;box-shadow:0 0 8px rgba(139,92,246,.15)">ONX</span>';
+    ?'<span class="badge b-cyan" style="letter-spacing:2px">TEA</span>'
+    :'<span class="badge b-purple" style="letter-spacing:2px">ONX</span>';
 }
 function placeBadge(pl){
   return pl==='MAIN ALLIANCE'
-    ?'<span class="badge b-amber" style="letter-spacing:.8px"><i class="fa-solid fa-shield-halved" style="font-size:.6rem;margin-right:3px"></i>Main</span>'
-    :'<span class="badge b-blue" style="letter-spacing:.8px"><i class="fa-solid fa-graduation-cap" style="font-size:.6rem;margin-right:3px"></i>Acad</span>';
+    ?'<span class="badge b-green" style="letter-spacing:.8px"><i class="fa-solid fa-shield-halved" style="font-size:.55rem;margin-right:3px"></i>Main</span>'
+    :'<span class="badge b-blue" style="letter-spacing:.8px"><i class="fa-solid fa-graduation-cap" style="font-size:.55rem;margin-right:3px"></i>Acad</span>';
 }
 function rankBadge(r){
   var styles={
-    R5:'background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.35);box-shadow:0 0 8px rgba(245,158,11,.15)',
-    R4:'background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.35);box-shadow:0 0 8px rgba(56,189,248,.12)',
-    R3:'background:rgba(59,130,246,.1); color:#60a5fa;border:1px solid rgba(59,130,246,.25)',
-    R2:'background:rgba(107,114,128,.1);color:#9ca3af;border:1px solid rgba(107,114,128,.22)',
-    R1:'background:rgba(75,85,99,.08);  color:#6b7280;border:1px solid rgba(75,85,99,.18)',
+    R5:'background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.45);box-shadow:0 0 8px rgba(245,158,11,.2)',
+    R4:'background:rgba(249,115,22,.15);color:#fb923c;border:1px solid rgba(249,115,22,.4)',
+    R3:'background:rgba(245,158,11,.1); color:#f59e0b;border:1px solid rgba(245,158,11,.3)',
+    R2:'background:rgba(87,83,78,.1);   color:#a8a29e;border:1px solid rgba(87,83,78,.28)',
+    R1:'background:rgba(68,64,60,.08);  color:#78716c;border:1px solid rgba(68,64,60,.22)',
   };
   return '<span class="badge" style="'+(styles[r]||styles.R1)+'">'+esc(r||'?')+'</span>';
 }
@@ -1256,7 +1293,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
    TABLE RENDERING (desktop)
 ════════════════════════════════════════════════════════════════ */
 function tabPlayers(tab){
-  var f=S.filters[tab]; var ss=S.sort[tab];
+  var f=S.filters[tab];var ss=S.sort[tab];
   var arr=S.players.filter(function(p){
     if(tab==='main'&&p.placement!=='MAIN ALLIANCE') return false;
     if(tab==='acad'&&p.placement!=='ACADEMY')       return false;
@@ -1278,7 +1315,7 @@ function renderTableDesktop(tab,players){
     {key:'tc',    label:'TC'},
     {key:'rank',  label:'Rank'},
     {key:'flag',  label:'Status'},
-    {key:'tags',  label:'Tags', sort:false},
+    {key:'tags',  label:'Tags',   sort:false},
   ];
   if(tab==='all') baseCols.splice(3,0,{key:'placement',label:'Assignment'});
   if(S.isAdmin)   baseCols.push({key:'_admin',label:'Actions',sort:false});
@@ -1293,7 +1330,7 @@ function renderTableDesktop(tab,players){
   }).join('')+'</tr>';
 
   if(!players.length){
-    document.getElementById('tb-'+tab).innerHTML='<tr><td colspan="'+baseCols.length+'" style="text-align:center;padding:40px;color:#1f2937;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</td></tr>';
+    document.getElementById('tb-'+tab).innerHTML='<tr><td colspan="'+baseCols.length+'" style="text-align:center;padding:40px;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</td></tr>';
     return;
   }
 
@@ -1306,24 +1343,23 @@ function renderTableDesktop(tab,players){
       adminCell='<td style="white-space:nowrap">'+
         '<select class="psel" onchange="quickPlace(\''+p.id+'\',this.value)">'+
           '<option value="MAIN ALLIANCE"'+(p.placement==='MAIN ALLIANCE'?' selected':'')+'>Main</option>'+
-          '<option value="ACADEMY"'      +(p.placement==='ACADEMY'?       ' selected':'')+'>Acad</option>'+
+          '<option value="ACADEMY"'+(p.placement==='ACADEMY'?' selected':'')+'>Acad</option>'+
         '</select> '+
         '<button class="btn btn-cyan" style="padding:2px 8px;font-size:.65rem;min-height:28px" onclick="onEdit(\''+p.id+'\')"><i class="fa-solid fa-pen text-xs"></i></button> '+
         '<button class="btn btn-red"  style="padding:2px 8px;font-size:.65rem;min-height:28px" onclick="onDel(\''+p.id+'\')"><i class="fa-solid fa-trash text-xs"></i></button>'+
         '</td>';
     }
-    var pc=powClass(p.power);
-    var tc=tcClass(p.tc);
+    var pc=powClass(p.power);var tc=tcClass(p.tc);
     return '<tr>'+
-      '<td style="color:#1f2937;font-size:.72rem;font-family:Rajdhani,sans-serif;font-weight:700">'+(i+1)+'</td>'+
-      '<td style="font-weight:600;color:#e2e8f0;font-size:.82rem">'+esc(p.name)+'</td>'+
+      '<td style="color:#292524;font-size:.72rem;font-family:Rajdhani,sans-serif;font-weight:700">'+(i+1)+'</td>'+
+      '<td style="font-weight:600;color:#fef3c7;font-size:.82rem">'+esc(p.name)+'</td>'+
       '<td>'+originBadge(p.origin)+'</td>'+
       placeCell+
-      '<td class="'+pc+'" style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.88rem">'+fmtPow(p.power)+'</td>'+
+      '<td class="'+pc+'" style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.9rem">'+fmtPow(p.power)+'</td>'+
       '<td class="'+tc+'" style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem">TC'+(p.tc||0)+'</td>'+
       '<td>'+rankBadge(p.rank)+'</td>'+
       '<td>'+flagBadge(p.flag)+'</td>'+
-      '<td style="max-width:160px">'+(tagPills||'<span style="color:#1f2937;font-size:.68rem">—</span>')+'</td>'+
+      '<td style="max-width:160px">'+(tagPills||'<span style="color:#292524;font-size:.68rem">&mdash;</span>')+'</td>'+
       adminCell+'</tr>';
   }).join('');
 }
@@ -1334,18 +1370,16 @@ function renderTableDesktop(tab,players){
 function renderCards(tab,players){
   var container=document.getElementById('cards-'+tab);
   if(!players.length){
-    container.innerHTML='<p style="text-align:center;padding:40px 0;color:#1f2937;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</p>';
+    container.innerHTML='<p style="text-align:center;padding:40px 0;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</p>';
     return;
   }
   container.innerHTML=players.map(function(p){
     var tags=(p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
-    var pc=powClass(p.power);
-    var tc=tcClass(p.tc);
+    var pc=powClass(p.power);var tc=tcClass(p.tc);
     var moveTarget=p.placement==='MAIN ALLIANCE'?'ACADEMY':'MAIN ALLIANCE';
     var moveLabel=p.placement==='MAIN ALLIANCE'
       ?'<i class="fa-solid fa-graduation-cap text-xs"></i> To Academy'
       :'<i class="fa-solid fa-shield-halved text-xs"></i> To Main';
-
     var adminHtml=S.isAdmin
       ?'<div class="pcard-actions">'+
           '<button class="btn btn-amber flex-1 text-xs" style="min-height:44px" onclick="quickPlace(\''+p.id+'\',\''+moveTarget+'\')">'+moveLabel+'</button>'+
@@ -1353,7 +1387,6 @@ function renderCards(tab,players){
           '<button class="btn btn-red"  style="min-width:44px;min-height:44px;padding:0;font-size:.9rem" onclick="onDel(\''+p.id+'\')"><i class="fa-solid fa-trash"></i></button>'+
         '</div>'
       :'';
-
     return '<div class="pcard">'+
       '<div class="flex items-start justify-between">'+
         '<div class="flex-1 min-w-0 pl-3">'+
@@ -1365,11 +1398,10 @@ function renderCards(tab,players){
       '<div class="pcard-stats">'+
         '<div class="pcard-stat"><div class="pcard-val '+pc+'">'+fmtPow(p.power)+'</div><div class="pcard-lbl">Power</div></div>'+
         '<div class="pcard-stat"><div class="pcard-val '+tc+'">TC'+(p.tc||0)+'</div><div class="pcard-lbl">Town Center</div></div>'+
-        '<div class="pcard-stat"><div class="pcard-val" style="color:#9ca3af">'+esc(p.origin||'—')+'</div><div class="pcard-lbl">Origin</div></div>'+
+        '<div class="pcard-stat"><div class="pcard-val" style="color:#a8a29e">'+esc(p.origin||'&mdash;')+'</div><div class="pcard-lbl">Origin</div></div>'+
       '</div>'+
       (tags.length?'<div class="flex flex-wrap gap-1 mt-2 pl-3">'+tags.map(function(t){return '<span class="tpill b-blue">'+esc(t)+'</span>';}).join('')+'</div>':'')+
-      adminHtml+
-    '</div>';
+      adminHtml+'</div>';
   }).join('');
 }
 
@@ -1377,17 +1409,14 @@ function renderTable(tab){
   var players=tabPlayers(tab);
   var cntEl=document.getElementById('cnt-'+tab);
   if(cntEl) cntEl.textContent='('+players.length+')';
-  renderTableDesktop(tab,players);
-  renderCards(tab,players);
+  renderTableDesktop(tab,players);renderCards(tab,players);
 }
 function onSort(tab,col){var ss=S.sort[tab];if(ss.col===col)ss.dir*=-1;else{ss.col=col;ss.dir=-1;}renderTable(tab);}
 function onEdit(id){var p=S.players.find(function(x){return x.id===id;});if(p)openPlayerModal(p);}
 function onDel(id) {var p=S.players.find(function(x){return x.id===id;});if(p)openDeleteModal(p);}
 function renderAll(){renderKPI();renderOverview();renderTable('main');renderTable('acad');renderTable('all');}
 
-/* ════════════════════════════════════════════════════════════════
-   UI HELPERS
-════════════════════════════════════════════════════════════════ */
+/* ── UI helpers ─────────────────────────────────────────────────── */
 function openModal(id) {document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function bgClick(e,id){if(e.target.id===id)closeModal(id);}
@@ -1395,28 +1424,26 @@ function bgClick(e,id){if(e.target.id===id)closeModal(id);}
 var _toastTimer;
 function toast(msg,type){
   var el=document.getElementById('toast');
-  el.textContent=msg; el.className='show '+(type||'success');
+  el.textContent=msg;el.className='show '+(type||'success');
   clearTimeout(_toastTimer);
   _toastTimer=setTimeout(function(){el.className='';},3500);
 }
 
 function setDbStatus(s){
   var dot=document.getElementById('db-dot'),txt=document.getElementById('db-txt');
-  if(s==='loading'){dot.style.background='#f59e0b';dot.style.boxShadow='0 0 6px rgba(245,158,11,.5)';txt.textContent='LINKING';}
-  else if(s==='ok'){dot.style.background='#10b981';dot.style.boxShadow='0 0 6px rgba(16,185,129,.5)';txt.textContent='ONLINE';}
-  else             {dot.style.background='#ef4444';dot.style.boxShadow='0 0 6px rgba(239,68,68,.5)'; txt.textContent='OFFLINE';}
+  if(s==='loading'){dot.style.background='#d97706';dot.style.boxShadow='0 0 6px rgba(217,119,6,.5)';txt.textContent='LINKING';}
+  else if(s==='ok'){dot.style.background='#f59e0b';dot.style.boxShadow='0 0 8px rgba(245,158,11,.6)';txt.textContent='ONLINE';}
+  else             {dot.style.background='#dc2626';dot.style.boxShadow='0 0 6px rgba(220,38,38,.5)'; txt.textContent='OFFLINE';}
 }
 
 function isoDate(){return new Date().toISOString().slice(0,10);}
 function dlBlob(content,name,mime){
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([content],{type:mime}));
-  a.download=name; a.click();
+  a.download=name;a.click();
 }
 
-/* ════════════════════════════════════════════════════════════════
-   TAB SWITCHING
-════════════════════════════════════════════════════════════════ */
+/* ── Tab switching ──────────────────────────────────────────────── */
 function switchTab(tab){
   document.querySelectorAll('.tb').forEach(function(b){b.classList.toggle('active',b.dataset.tab===tab);});
   document.querySelectorAll('.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===tab);});
@@ -1427,47 +1454,37 @@ document.querySelectorAll('.tb').forEach(function(btn){
   btn.addEventListener('click',function(){switchTab(btn.dataset.tab);});
 });
 
-/* ════════════════════════════════════════════════════════════════
-   ADMIN DRAWER
-════════════════════════════════════════════════════════════════ */
+/* ── Admin drawer ───────────────────────────────────────────────── */
 function openDrawer(){document.getElementById('admin-drawer').classList.add('open');document.getElementById('drawer-backdrop').classList.add('open');}
 function closeDrawer(){document.getElementById('admin-drawer').classList.remove('open');document.getElementById('drawer-backdrop').classList.remove('open');}
 
-/* ════════════════════════════════════════════════════════════════
-   FILTER WIRING
-════════════════════════════════════════════════════════════════ */
+/* ── Filter wiring ──────────────────────────────────────────────── */
 function wireAll(){
   function wire(id,tab,field){
-    var el=document.getElementById(id); if(!el) return;
+    var el=document.getElementById(id);if(!el)return;
     function up(){S.filters[tab][field]=el.value;renderTable(tab);}
-    el.addEventListener('input',up); el.addEventListener('change',up);
+    el.addEventListener('input',up);el.addEventListener('change',up);
   }
-  wire('q-main','main','q'); wire('f-origin-main','main','origin');
-  wire('q-acad','acad','q'); wire('f-origin-acad','acad','origin');
-  wire('q-all','all','q');   wire('f-place-all','all','placement'); wire('f-origin-all','all','origin');
+  wire('q-main','main','q');wire('f-origin-main','main','origin');
+  wire('q-acad','acad','q');wire('f-origin-acad','acad','origin');
+  wire('q-all','all','q');wire('f-place-all','all','placement');wire('f-origin-all','all','origin');
 }
 
-/* ════════════════════════════════════════════════════════════════
-   KEYBOARD
-════════════════════════════════════════════════════════════════ */
+/* ── Keyboard ───────────────────────────────────────────────────── */
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){['m-login','m-player','m-del','m-csv'].forEach(closeModal);closeDrawer();}
   if(e.key==='Enter'&&document.getElementById('m-login').classList.contains('open'))doLogin();
 });
 
-/* ════════════════════════════════════════════════════════════════
-   DRAG-DROP
-════════════════════════════════════════════════════════════════ */
+/* ── Drag-drop ──────────────────────────────────────────────────── */
 (function(){
-  var dz=document.getElementById('csv-dz'); if(!dz) return;
+  var dz=document.getElementById('csv-dz');if(!dz)return;
   dz.addEventListener('dragover', function(e){e.preventDefault();dz.classList.add('over');});
   dz.addEventListener('dragleave',function() {dz.classList.remove('over');});
   dz.addEventListener('drop',     function(e){e.preventDefault();dz.classList.remove('over');var f=e.dataTransfer.files[0];if(f)onCSVFile(f);});
 })();
 
-/* ════════════════════════════════════════════════════════════════
-   REAL-TIME
-════════════════════════════════════════════════════════════════ */
+/* ── Real-time ──────────────────────────────────────────────────── */
 function subscribeRT(){
   sb.channel('roster-rt')
     .on('postgres_changes',{event:'*',schema:'public',table:'players'},async function(){
@@ -1475,18 +1492,14 @@ function subscribeRT(){
     }).subscribe();
 }
 
-/* ════════════════════════════════════════════════════════════════
-   INIT
-════════════════════════════════════════════════════════════════ */
+/* ── Init ───────────────────────────────────────────────────────── */
 async function init(){
   document.getElementById('loading-state').classList.remove('hidden');
   document.getElementById('error-state').classList.add('hidden');
   document.getElementById('app').classList.add('hidden');
 
-  sb.auth.onAuthStateChange(function(event,session){
-    applyAuthState(session?session.user:null);
-  });
-  try{var{data:{user}}=await sb.auth.getUser(); applyAuthState(user);}catch(e){}
+  sb.auth.onAuthStateChange(function(event,session){applyAuthState(session?session.user:null);});
+  try{var{data:{user}}=await sb.auth.getUser();applyAuthState(user);}catch(e){}
 
   try{await fetchPlayers();}catch(err){
     document.getElementById('loading-state').classList.add('hidden');
@@ -1494,10 +1507,9 @@ async function init(){
     document.getElementById('error-msg').textContent=err.message;
     return;
   }
-
   document.getElementById('loading-state').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  wireAll(); renderAll(); subscribeRT();
+  wireAll();renderAll();subscribeRT();
 }
 
 init();
