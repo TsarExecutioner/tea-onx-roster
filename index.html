@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="theme-color" content="#0a0807"/>
-<title>TEA x ONX — Command Center</title>
+<title>TEA x ONX - Merge Center</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{bebas:['Bebas Neue','sans-serif'],display:['Rajdhani','sans-serif'],body:['Inter','sans-serif']}}}}</script>
@@ -567,7 +567,7 @@ select.fi{cursor:pointer;appearance:none}
       <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-login')">&times;</button>
     </div>
     <div class="space-y-4">
-      <div><label class="fl">Email</label><input id="l-email" class="fi" type="email" placeholder="commander@alliance.com" autocomplete="email" inputmode="email"/></div>
+      <div><label class="fl">Email</label><input id="l-email" class="fi" type="email" placeholder="user@tea.com" autocomplete="email" inputmode="email"/></div>
       <div><label class="fl">Password</label><input id="l-pass" class="fi" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
       <div id="l-err" class="hidden text-xs rounded px-3 py-2" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:#f87171;font-family:Rajdhani,sans-serif"></div>
       <button id="l-btn" class="btn btn-tea w-full" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command</button>
@@ -584,7 +584,7 @@ select.fi{cursor:pointer;appearance:none}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div class="sm:col-span-2"><label class="fl">Soldier Name *</label><input id="p-name" class="fi" type="text" placeholder="In-game callsign" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
       <div><label class="fl">Origin</label><select id="p-origin" class="fi"><option value="TEA">TEA</option><option value="ONX">ONX</option></select></div>
-      <div><label class="fl">Rank</label><select id="p-rank" class="fi"><option value="R5">R5 — Commander</option><option value="R4">R4 — Officer</option><option value="R3" selected>R3 — Soldier</option><option value="R2">R2 — Recruit</option><option value="R1">R1 — Initiate</option></select></div>
+      <div><label class="fl">Rank</label><select id="p-rank" class="fi"><option value="R5">R5 - Commander</option><option value="R4">R4 — Officer</option><option value="R3" selected>R3 — Soldier</option><option value="R2">R2 — Recruit</option><option value="R1">R1 — Initiate</option></select></div>
       <div><label class="fl">Power (Millions)</label><input id="p-power" class="fi" type="number" inputmode="decimal" step="0.1" min="0" placeholder="e.g. 45.5"/></div>
       <div><label class="fl">Town Center (TC)</label><input id="p-tc" class="fi" type="number" inputmode="numeric" min="1" max="35" placeholder="e.g. 28"/></div>
       <div><label class="fl">Assignment</label><select id="p-place" class="fi"><option value="MAIN ALLIANCE">Main Alliance</option><option value="ACADEMY">Academy</option></select></div>
@@ -618,7 +618,7 @@ select.fi{cursor:pointer;appearance:none}
   <div class="mbox wide">
     <div class="flex items-center justify-between mb-4">
       <div><h2 class="bbns font-black text-2xl" style="color:#fb923c"><i class="fa-solid fa-file-import mr-1"></i>Import Roster</h2>
-        <p class="text-xs mt-0.5 sec-lbl">Bulk-import or update soldiers via CSV</p></div>
+        <p class="text-xs mt-0.5 sec-lbl">Bulk-import or update members via CSV</p></div>
       <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-csv');resetCSV()">&times;</button>
     </div>
     <div id="csv-dz" class="dropzone mb-4" onclick="document.getElementById('csv-file').click()">
@@ -673,7 +673,7 @@ async function doLogin(){
   btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command';
   if(error){showEl('l-err',error.message);return;}
   closeModal('m-login');document.getElementById('l-email').value='';document.getElementById('l-pass').value='';
-  toast('Welcome back, Commander!','success');
+  toast('Welcome back, Tea Master!','success');
 }
 async function doLogout(){await sb.auth.signOut();toast('Signed out.','info');}
 function showEl(id,msg){var el=document.getElementById(id);el.textContent=msg;el.classList.remove('hidden');}
@@ -790,7 +790,7 @@ function renderKPI(){
   var aAvg=acad.length?aTot/acad.length:0;
 
   var kpis=[
-    {l:'PERSONNEL',v:ps.length,sub:tea.length+' TEA &bull; '+onx.length+' ONX',icon:'fa-users',
+    {l:'MEMBERS',v:ps.length,sub:tea.length+' TEA &bull; '+onx.length+' ONX',icon:'fa-users',
      cls:'',ic:'#fb923c',ib:'rgba(249,115,22,.14)',bar:'linear-gradient(90deg,#fbbf24 40%,#38bdf8 100%)',vc:'#fef3c7',glow:'0 0 24px rgba(249,115,22,.05)'},
     {l:'MAIN ALLIANCE',v:main.length,sub:'Avg '+fmtPow(mAvg)+' &bull; '+fmtPow(mTot),icon:'fa-shield-halved',
      cls:'card-tea',ic:'#fbbf24',ib:'rgba(245,158,11,.15)',bar:'linear-gradient(90deg,#d97706,#fbbf24)',vc:'#fbbf24',glow:'0 0 24px rgba(245,158,11,.07)'},
@@ -864,7 +864,7 @@ function renderOverview(){
       '</div>'+
       '<div class="pb"><div class="pf" style="width:'+pct+'%;background:'+g.bg+';box-shadow:0 0 8px rgba(245,158,11,.18)"></div></div></div>';
   }).join('')+
-  '<div class="pt-2 text-xs sec-lbl" style="border-top:1px solid rgba(245,158,11,.07);margin-top:6px">TOTAL: <span style="color:#a8a29e">'+ps.length+' soldiers</span></div>';
+  '<div class="pt-2 text-xs sec-lbl" style="border-top:1px solid rgba(245,158,11,.07);margin-top:6px">TOTAL: <span style="color:#a8a29e">'+ps.length+' members</span></div>';
 
   function mTot(){return main.reduce(function(s,p){return s+(p.power||0);},0);}
   function aTot(){return acad.reduce(function(s,p){return s+(p.power||0);},0);}
@@ -874,11 +874,11 @@ function renderOverview(){
     {l:'TEA',cnt:tea.length,pow:tea.reduce(function(s,p){return s+(p.power||0);},0),
      main:tea.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length,
      acad:tea.filter(function(p){return p.placement==='ACADEMY';}).length,
-     tc:'#fbbf24',dot:'rgba(251,191,36,.9)',desc:'Amber Forge'},
+     tc:'#fbbf24',dot:'rgba(251,191,36,.9)',desc:''},
     {l:'ONX',cnt:onx.length,pow:onx.reduce(function(s,p){return s+(p.power||0);},0),
      main:onx.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length,
      acad:onx.filter(function(p){return p.placement==='ACADEMY';}).length,
-     tc:'#38bdf8',dot:'rgba(56,189,248,.9)',desc:'Frost Legion'},
+     tc:'#38bdf8',dot:'rgba(56,189,248,.9)',desc:''},
   ].map(function(o){
     return '<div class="flex items-center justify-between py-2 px-2 rounded" style="border:1px solid rgba(245,158,11,.07);background:rgba(255,255,255,.015)">'+
       '<div class="flex items-center gap-2">'+
@@ -911,7 +911,7 @@ function renderOverview(){
     '<i class="fa-solid fa-shield-halved mr-1" style="color:#fbbf24;font-size:.75rem"></i><strong style="color:#fbbf24">'+main.length+'</strong> Main Alliance &bull; <strong style="color:#d97706">'+acad.length+'</strong> Academy',
     '<i class="fa-solid fa-bolt mr-1" style="color:#f59e0b;font-size:.75rem"></i><strong style="color:#f59e0b">'+fmtPow(ps.reduce(function(s,p){return s+(p.power||0);},0))+'</strong> combined battle power',
     '<i class="fa-solid fa-flag mr-1" style="color:#fde68a;font-size:.75rem"></i><strong style="color:#fde68a">'+ps.filter(function(p){return p.flag==='EVALUATE';}).length+'</strong> flagged for evaluation',
-    '<i class="fa-solid fa-skull-crossbones mr-1" style="color:#f87171;font-size:.75rem"></i><strong style="color:#f87171">'+ps.filter(function(p){return p.flag==='INACTIVE';}).length+'</strong> inactive soldiers',
+    '<i class="fa-solid fa-skull-crossbones mr-1" style="color:#f87171;font-size:.75rem"></i><strong style="color:#f87171">'+ps.filter(function(p){return p.flag==='INACTIVE';}).length+'</strong> inactive members',
     '<i class="fa-solid fa-arrows-rotate mr-1" style="color:#d97706;font-size:.75rem"></i><strong style="color:#d97706">'+ps.filter(function(p){return p.flag==='PENDING MOVE';}).length+'</strong> with pending transfer orders',
   ];
   document.getElementById('ov-actions').innerHTML=acts.map(function(a){return '<li style="border-left:2px solid rgba(245,158,11,.22);padding-left:10px;padding-top:2px;padding-bottom:2px;color:#78716c;font-size:.82rem">'+a+'</li>';}).join('');
@@ -952,7 +952,7 @@ function renderTableDesktop(tab,players){
   if(S.isAdmin)baseCols.push({key:'_admin',label:'Actions',sort:false});
   var ss=S.sort[tab];
   document.getElementById('th-'+tab).innerHTML='<tr>'+baseCols.map(function(c){if(c.sort===false)return '<th>'+c.label+'</th>';var active=ss.col===c.key;var cls=active?(ss.dir>0?'asc':'desc'):'';var arrow=active?(ss.dir>0?'&#9650;':'&#9660;'):'&#8597;';return '<th class="'+cls+'" onclick="onSort(\''+tab+'\',\''+c.key+'\')">'+c.label+' <span class="si">'+arrow+'</span></th>';}).join('')+'</tr>';
-  if(!players.length){document.getElementById('tb-'+tab).innerHTML='<tr><td colspan="'+baseCols.length+'" style="text-align:center;padding:40px;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</td></tr>';return;}
+  if(!players.length){document.getElementById('tb-'+tab).innerHTML='<tr><td colspan="'+baseCols.length+'" style="text-align:center;padding:40px;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No members match current filters</td></tr>';return;}
   document.getElementById('tb-'+tab).innerHTML=players.map(function(p,i){
     var tagPills=(p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean).map(function(t){return '<span class="tpill b-blue" style="font-family:Rajdhani,sans-serif">'+esc(t)+'</span>';}).join('');
     var placeCell=tab==='all'?'<td>'+placeBadge(p.placement)+'</td>':'';
@@ -974,7 +974,7 @@ function renderTableDesktop(tab,players){
 /* MOBILE CARDS */
 function renderCards(tab,players){
   var container=document.getElementById('cards-'+tab);
-  if(!players.length){container.innerHTML='<p style="text-align:center;padding:40px 0;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</p>';return;}
+  if(!players.length){container.innerHTML='<p style="text-align:center;padding:40px 0;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No members match current filters</p>';return;}
   container.innerHTML=players.map(function(p){
     var tags=(p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
     var pc=powClass(p.power);var tc=tcClass(p.tc);
