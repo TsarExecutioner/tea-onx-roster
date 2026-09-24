@@ -22,7 +22,7 @@ tailwind.config = {
 <style>
 /* ── Base ─────────────────────────────────────────────────────── */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:100vh;overscroll-behavior:none}
+html{overflow-x:hidden}body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:100vh;overscroll-behavior:none;overflow-x:hidden}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:#0f1629}
 ::-webkit-scrollbar-thumb{background:#243160;border-radius:2px}
@@ -40,7 +40,7 @@ body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:
 .abar{background:linear-gradient(90deg,#0f1a30,#150e28);border-bottom:1px solid rgba(124,58,237,.3)}
 
 /* ── Cards ─────────────────────────────────────────────────────── */
-.card{background:#0f1629;border:1px solid #1c2649;border-radius:12px;transition:border-color .2s}
+.card{background:#0f1629;border:1px solid #1c2649;border-radius:12px;transition:border-color .2s;min-width:0;max-width:100%;box-sizing:border-box}
 .card:hover{border-color:#243160}
 .kbar{height:3px;border-radius:2px}
 
@@ -52,7 +52,7 @@ body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:
     border:1px solid transparent;border-bottom:none;transition:all .2s;white-space:nowrap;background:transparent}
 .tb:hover{color:#e2e8f0;background:#151d38}
 .tb.active{color:#00d4ff;background:#0f1629;border-color:#1c2649;border-bottom-color:#0f1629;margin-bottom:-1px}
-.tp{display:none}.tp.active{display:block}
+.tp{display:none;min-width:0;max-width:100%}.tp.active{display:block;min-width:0;max-width:100%}
 
 /* ── Desktop tables ────────────────────────────────────────────── */
 .dt{width:100%;border-collapse:collapse;font-size:.82rem}
@@ -65,7 +65,8 @@ body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:
 .dt tbody tr{border-bottom:1px solid rgba(28,38,73,.25);transition:background .15s}
 .dt tbody tr:hover{background:rgba(21,29,56,.45)}
 .dt tbody td{padding:9px 12px;vertical-align:middle}
-.tw{overflow-x:auto;border-radius:8px;-webkit-overflow-scrolling:touch}
+.tw{width:100%;max-width:100%;overflow-x:auto;border-radius:8px;-webkit-overflow-scrolling:touch}
+.card.tw,.card>.tw{overflow-x:auto;max-width:100%;contain:inline-size}
 
 /* ── Mobile player card ─────────────────────────────────────────── */
 .pcard{background:#0f1629;border:1px solid #1c2649;border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color .2s}
@@ -76,7 +77,7 @@ body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:
 .pcard-stat{background:#151d38;border-radius:8px;padding:8px 6px;text-align:center}
 .pcard-val{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.1rem;line-height:1}
 .pcard-lbl{font-size:.6rem;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.pcard-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(28,38,73,.4)}
+.pcard-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(28,38,73,.4)}
 
 /* ── Badges ─────────────────────────────────────────────────────── */
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;
@@ -173,6 +174,9 @@ select.fi{cursor:pointer;appearance:none}
 #toast.info   {background:#060e1e;border:1px solid rgba(0,212,255,.4);color:#00d4ff}
 #toast.warn   {background:#1a1000;border:1px solid rgba(245,158,11,.4);color:#f59e0b}
 
+/* ── Admin bar: desktop only (FAB drawer handles mobile) */
+@media(max-width:767px){#admin-bar{display:none!important}}
+
 /* ── Mobile bottom navigation ────────────────────────────────────── */
 .bnav{position:fixed;bottom:0;left:0;right:0;background:#0a0e1a;
     border-top:1px solid #1c2649;z-index:100;
@@ -268,7 +272,7 @@ select.fi{cursor:pointer;appearance:none}
 
 <!-- ════════════════════════ ADMIN BAR (desktop) ═════════════════ -->
 <div id="admin-bar" class="abar hidden">
-  <div class="max-w-screen-2xl mx-auto px-4 py-2 flex flex-wrap items-center gap-2">
+  <div class="max-w-screen-2xl mx-auto px-4 py-2 flex flex-wrap items-center gap-2 min-w-0 w-full">
     <div class="flex items-center gap-2">
       <span class="dot bg-violet-500"></span>
       <span class="text-xs font-bold text-violet-400 tracking-widest uppercase" style="font-family:Rajdhani,sans-serif">Admin Mode</span>
@@ -292,7 +296,7 @@ select.fi{cursor:pointer;appearance:none}
 </div>
 
 <!-- ════════════════════════════ MAIN ════════════════════════════ -->
-<main class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+<main class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6" style="overflow-x:hidden">
 
   <!-- Loading -->
   <div id="loading-state" class="text-center py-24 text-slate-400">
@@ -1228,7 +1232,7 @@ function renderCards(tab, players) {
     var powColor = parseFloat(p.power)>=1000 ? 'text-cyan-400' : 'text-green-400';
 
     // Quick-move: show which action is available
-    var moveLabel = p.placement==='MAIN ALLIANCE' ? '&#127891; Move to Academy' : '&#9876; Move to Main';
+    var moveLabel = p.placement==='MAIN ALLIANCE' ? '&#127891; To Academy' : '&#9876; To Main Alliance';
     var moveTarget= p.placement==='MAIN ALLIANCE' ? 'ACADEMY' : 'MAIN ALLIANCE';
 
     var adminHtml = S.isAdmin
