@@ -22,7 +22,8 @@ tailwind.config = {
 <style>
 /* ── Base ─────────────────────────────────────────────────────── */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{overflow-x:hidden}body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:100vh;overscroll-behavior:none;overflow-x:hidden}
+html{scroll-behavior:smooth;overflow-x:clip}
+body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:100vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:#0f1629}
 ::-webkit-scrollbar-thumb{background:#243160;border-radius:2px}
@@ -125,16 +126,18 @@ html{overflow-x:hidden}body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter'
 
 /* ── Modals — desktop centered, mobile full-screen bottom sheet ── */
 .mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);
-    z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
-.mbg.open{display:flex}
+    z-index:200;display:none;align-items:center;justify-content:center;padding:16px;
+    pointer-events:none}
+.mbg.open{display:flex;pointer-events:all}
 .mbox{background:#0f1629;border:1px solid #243160;border-radius:16px;width:100%;
-    max-width:560px;max-height:92vh;overflow-y:auto;padding:28px;position:relative}
+    max-width:560px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:28px;position:relative}
 .mbox.wide{max-width:740px}
 /* Mobile: bottom sheet */
 @media(max-width:767px){
   .mbg{align-items:flex-end;padding:0}
   .mbox{max-width:100%;border-radius:20px 20px 0 0;max-height:94vh;
-        padding:20px 16px calc(20px + env(safe-area-inset-bottom));width:100%}
+        padding:20px 16px calc(20px + env(safe-area-inset-bottom));width:100%;
+        overflow-y:auto;-webkit-overflow-scrolling:touch}
   .mbox.wide{max-width:100%}
 }
 
@@ -199,11 +202,12 @@ select.fi{cursor:pointer;appearance:none}
 .drawer{position:fixed;bottom:0;left:0;right:0;z-index:150;
     background:#0f1629;border-top:1px solid rgba(124,58,237,.4);border-radius:20px 20px 0 0;
     padding:20px 16px calc(80px + env(safe-area-inset-bottom));
+    max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
     transform:translateY(100%);transition:transform .3s ease;pointer-events:none}
 .drawer.open{transform:translateY(0);pointer-events:all}
 .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:140;
-    display:none;backdrop-filter:blur(3px)}
-.drawer-backdrop.open{display:block}
+    display:none;backdrop-filter:blur(3px);pointer-events:none}
+.drawer-backdrop.open{display:block;pointer-events:all}
 .drawer-item{display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;
     cursor:pointer;transition:background .15s;color:#e2e8f0;border:none;background:transparent;
     width:100%;font-family:inherit;font-size:.95rem;font-weight:600;min-height:56px}
@@ -214,6 +218,14 @@ select.fi{cursor:pointer;appearance:none}
 .dropzone{border:2px dashed #243160;border-radius:12px;padding:28px;text-align:center;
     cursor:pointer;transition:border-color .2s}
 .dropzone:hover,.dropzone.over{border-color:rgba(0,212,255,.5);background:rgba(0,212,255,.04)}
+
+/* ── Scroll & touch safety ─────────────────────────────────────── */
+/* Scrollable sub-containers all get momentum scroll */
+.tw,.tab-scroll,.mbox,.drawer{-webkit-overflow-scrolling:touch}
+/* Ensure nothing in the layout captures touches when hidden */
+[hidden]{pointer-events:none!important}
+/* Tab panels are block scroll participants — never clip */
+.tp,.tp.active{overflow-x:visible;overflow-y:visible}
 
 /* ── Responsive helpers ──────────────────────────────────────────── */
 @media(max-width:767px){
@@ -296,7 +308,7 @@ select.fi{cursor:pointer;appearance:none}
 </div>
 
 <!-- ════════════════════════════ MAIN ════════════════════════════ -->
-<main class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6" style="overflow-x:hidden">
+<main class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
 
   <!-- Loading -->
   <div id="loading-state" class="text-center py-24 text-slate-400">
