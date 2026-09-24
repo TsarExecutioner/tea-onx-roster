@@ -9,453 +9,375 @@
 <title>TEA x ONX — Command Center</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{display:['Rajdhani','sans-serif'],body:['Inter','sans-serif']}}}}</script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{bebas:['Bebas Neue','sans-serif'],display:['Rajdhani','sans-serif'],body:['Inter','sans-serif']}}}}</script>
+
+<!-- Fonts: Bebas Neue (war-room headers) + Rajdhani (tactical UI) + Inter (body/data) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-/* ── Reset & base ──────────────────────────────────────────────────
-   #0a0807 = deep charcoal-black canvas (true dark foundation)
-   #141210 = card surface (noticeably warmer/lighter than canvas)
-   #1c1814 = raised surface / thead
-   #f97316 = ember orange (primary forge accent)
-   #fbbf24 = warm gold (secondary throne accent)
-   #f59e0b = amber (tertiary)
-   #ea580c = molten copper (deep ember)
-   #dc2626 = blood crimson (danger)
-──────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   NORTHERN LORDS v6 — THREE-FACTION COLOR SYSTEM
+   ──────────────────────────────────────────────────────────────────
+   Canvas:      #0a0807   (deep charcoal war room)
+   Surface:     #161310   (stone-plate panels)
+   Raised:      #1c1814   (thead / header strips)
+   ──────────────────────────────────────────────────────────────────
+   TEA Alliance  →  Molten Amber / Warm Gold
+     Primary:   #f59e0b   rgba(245,158,11,X)
+     Bright:    #fbbf24   rgba(251,191,36,X)
+     Deep:      #d97706
+   ──────────────────────────────────────────────────────────────────
+   ONX Alliance  →  Ice-Frost Cyan / Tactical Steel Blue
+     Primary:   #38bdf8   rgba(56,189,248,X)
+     Accent:    #0ea5e9   rgba(14,165,233,X)
+     Deep:      #0284c7
+   ──────────────────────────────────────────────────────────────────
+   Academy       →  Bronze / Copper
+     Primary:   #d97706   rgba(217,119,6,X)
+     Accent:    #b45309   rgba(180,83,9,X)
+     Deep:      #92400e
+   ──────────────────────────────────────────────────────────────────
+   Forge Fire (neutral): #f97316  rgba(249,115,22,X)
+   Blood Crimson:        #dc2626  rgba(220,38,38,X)
+═══════════════════════════════════════════════════════════════════ */
+
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth;overflow-x:clip}
 
 body{
   background-color:#0a0807;
-  /* Forge-fire ambient: subtle warm radial glow in corners, scan-line texture */
   background-image:
-    radial-gradient(ellipse at 10% 70%,rgba(120,50,10,.09) 0%,transparent 55%),
-    radial-gradient(ellipse at 90% 20%,rgba(160,70,10,.06) 0%,transparent 50%),
-    repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(245,158,11,.005) 3px,rgba(245,158,11,.005) 4px);
-  color:#e7e5e4;
-  font-family:'Inter',sans-serif;
-  min-height:100vh;
-  overflow-y:auto;overflow-x:hidden;
+    linear-gradient(rgba(245,158,11,.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(245,158,11,.02) 1px,transparent 1px),
+    radial-gradient(ellipse at 10% 72%,rgba(120,50,10,.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 92% 18%,rgba(14,165,233,.04) 0%,transparent 50%);
+  background-size:40px 40px,40px 40px,auto,auto;
+  color:#e7e5e4;font-family:'Inter',sans-serif;
+  min-height:100vh;overflow-y:auto;overflow-x:hidden;
   overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y;
 }
-
-/* Scrollbars */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:#0a0807}
-::-webkit-scrollbar-thumb{background:rgba(245,158,11,.4);border-radius:2px}
-::-webkit-scrollbar-thumb:hover{background:rgba(249,115,22,.6)}
+::-webkit-scrollbar-thumb{background:rgba(245,158,11,.35);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,.5)}
 
-/* ── Header ────────────────────────────────────────────────────────
-   Slightly lighter than canvas, gold bottom glow + forge gradient
-──────────────────────────────────────────────────────────────────── */
+/* ── Pulse animation ────────────────────────────────────────────── */
+@keyframes pulse-ring{
+  0%{box-shadow:0 0 0 0 rgba(245,158,11,.6),0 0 6px rgba(245,158,11,.5)}
+  70%{box-shadow:0 0 0 5px rgba(245,158,11,0),0 0 14px rgba(245,158,11,.3)}
+  100%{box-shadow:0 0 0 0 rgba(245,158,11,0),0 0 6px rgba(245,158,11,.5)}
+}
+.dot-pulse{animation:pulse-ring 2s ease-out infinite}
+
+/* ── Header ─────────────────────────────────────────────────────── */
 .hdr{
   background:linear-gradient(180deg,#1c1410 0%,#110d0b 100%);
-  border-bottom:1px solid rgba(245,158,11,.35);
-  box-shadow:0 1px 0 rgba(249,115,22,.12),0 4px 30px rgba(0,0,0,.7);
+  border-bottom:1px solid rgba(245,158,11,.28);
+  box-shadow:0 1px 0 rgba(249,115,22,.1),0 4px 30px rgba(0,0,0,.8);
   position:relative;
 }
 .hdr::after{
-  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(245,158,11,.6) 25%,rgba(249,115,22,.5) 75%,transparent);
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(245,158,11,.65) 30%,rgba(56,189,248,.5) 70%,transparent);
 }
+.abar{background:rgba(14,11,9,.98);border-bottom:1px solid rgba(245,158,11,.14);box-shadow:0 2px 20px rgba(0,0,0,.6);}
 
-/* Admin bar */
-.abar{
-  background:rgba(14,11,9,.98);
-  border-bottom:1px solid rgba(245,158,11,.18);
-  box-shadow:0 2px 20px rgba(0,0,0,.6);
-}
-
-/* ── Cards — stone-plate panels ────────────────────────────────────
-   Must pop clearly above the #0a0807 canvas.
-   Background: #141210 (warm dark stone)
-   Border: visible warm amber line
-   Shadow: deep drop + subtle inner glow
-──────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   CARDS — Base stone-plate panel
+   Corner brackets: TL = TEA amber · BR = ONX cyan
+   Alliance-specific hover glows via .card-tea / .card-onx / .card-acad
+═══════════════════════════════════════════════════════════════════ */
 .card{
   background:linear-gradient(145deg,#161310,#120f0d);
-  border:1px solid rgba(245,158,11,.22);
-  border-radius:6px;
+  border:1px solid rgba(245,158,11,.18);border-radius:6px;
   position:relative;overflow:hidden;
   min-width:0;max-width:100%;box-sizing:border-box;
-  box-shadow:0 6px 24px rgba(0,0,0,.65),inset 0 1px 0 rgba(251,191,36,.07);
-  transition:border-color .25s,box-shadow .25s;
+  box-shadow:0 6px 28px rgba(0,0,0,.68),inset 0 1px 0 rgba(251,191,36,.05);
+  transition:border-color .25s,box-shadow .25s,transform .2s;
 }
 .card:hover{
-  border-color:rgba(245,158,11,.42);
-  box-shadow:0 6px 24px rgba(0,0,0,.65),inset 0 1px 0 rgba(251,191,36,.1),0 0 22px rgba(249,115,22,.07);
+  border-color:rgba(245,158,11,.35);
+  box-shadow:0 10px 36px rgba(0,0,0,.75),inset 0 1px 0 rgba(251,191,36,.08),0 0 20px rgba(245,158,11,.05);
+  transform:translateY(-1px);
 }
-/* Forge corner brackets */
+/* TEA: warm amber glow on hover */
+.card-tea:hover{
+  border-color:rgba(245,158,11,.5)!important;
+  box-shadow:0 10px 36px rgba(0,0,0,.75),inset 0 1px 0 rgba(251,191,36,.1),0 0 28px rgba(245,158,11,.12)!important;
+}
+/* ONX: ice-cyan glow on hover */
+.card-onx:hover{
+  border-color:rgba(56,189,248,.4)!important;
+  box-shadow:0 10px 36px rgba(0,0,0,.75),inset 0 1px 0 rgba(56,189,248,.06),0 0 28px rgba(56,189,248,.1)!important;
+}
+/* Academy: bronze glow on hover */
+.card-acad:hover{
+  border-color:rgba(217,119,6,.45)!important;
+  box-shadow:0 10px 36px rgba(0,0,0,.75),inset 0 1px 0 rgba(217,119,6,.07),0 0 24px rgba(217,119,6,.1)!important;
+}
+/* Corner brackets */
 .card::before{
-  content:'';position:absolute;top:0;left:0;
-  width:14px;height:14px;
-  border-top:1.5px solid rgba(249,115,22,.55);
-  border-left:1.5px solid rgba(249,115,22,.55);
+  content:'';position:absolute;top:0;left:0;width:16px;height:16px;
+  border-top:2px solid rgba(245,158,11,.55);border-left:2px solid rgba(245,158,11,.55);
   border-radius:3px 0 0 0;pointer-events:none;z-index:1;
 }
 .card::after{
-  content:'';position:absolute;bottom:0;right:0;
-  width:14px;height:14px;
-  border-bottom:1.5px solid rgba(251,191,36,.38);
-  border-right:1.5px solid rgba(251,191,36,.38);
+  content:'';position:absolute;bottom:0;right:0;width:16px;height:16px;
+  border-bottom:2px solid rgba(56,189,248,.4);border-right:2px solid rgba(56,189,248,.4);
   border-radius:0 0 3px 0;pointer-events:none;z-index:1;
 }
 .kbar{height:2px;border-radius:1px;width:100%}
 
-/* ── Tab bar ────────────────────────────────────────────────────── */
+/* ── Tabs ────────────────────────────────────────────────────────── */
 .tab-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tab-scroll::-webkit-scrollbar{display:none}
-
 .tb{
   flex-shrink:0;padding:10px 18px;
   font-family:'Rajdhani',sans-serif;font-weight:700;
-  font-size:.86rem;letter-spacing:1px;text-transform:uppercase;
+  font-size:.86rem;letter-spacing:1.2px;text-transform:uppercase;
   color:#44403c;cursor:pointer;background:transparent;
   border:none;border-bottom:2px solid transparent;
   white-space:nowrap;transition:all .2s;
 }
 .tb:hover{color:#78716c}
-.tb.active{
-  color:#fbbf24;
-  border-bottom-color:#f97316;
-  text-shadow:0 0 18px rgba(249,115,22,.75),0 0 40px rgba(249,115,22,.3);
-}
+.tb.active{color:#fbbf24;border-bottom-color:#f97316;text-shadow:0 0 20px rgba(249,115,22,.8),0 0 45px rgba(249,115,22,.3)}
 .tp{display:none;min-width:0;max-width:100%}
 .tp.active{display:block;min-width:0;max-width:100%}
+.tab-bar-bg{background:rgba(10,8,7,.97);border-bottom:1px solid rgba(245,158,11,.1)}
 
-/* Tab bar background */
-.tab-bar-bg{
-  background:rgba(10,8,7,.97);
-  border-bottom:1px solid rgba(245,158,11,.12);
-}
-
-/* ── Data tables ────────────────────────────────────────────────── */
+/* ── Data tables ─────────────────────────────────────────────────── */
 .dt{width:100%;border-collapse:collapse;font-size:.8rem}
-.dt thead tr{
-  background:linear-gradient(90deg,#1c1814,#19150f);
-  border-bottom:1px solid rgba(245,158,11,.25);
-}
+.dt thead tr{background:linear-gradient(90deg,#1c1814,#19150f);border-bottom:1px solid rgba(245,158,11,.2)}
 .dt thead th{
-  color:#78716c;
-  font-family:'Rajdhani',sans-serif;font-weight:700;
+  color:#78716c;font-family:'Rajdhani',sans-serif;font-weight:700;
   letter-spacing:1.2px;text-transform:uppercase;padding:10px 12px;
   text-align:left;cursor:pointer;white-space:nowrap;user-select:none;
   border-right:1px solid rgba(245,158,11,.06);transition:color .15s;
 }
 .dt thead th:last-child{border-right:none}
-.dt thead th:hover{color:#d97706}
+.dt thead th:hover{color:#fbbf24}
 .dt thead th .si{opacity:.25;margin-left:3px;font-size:.72em}
 .dt thead th.asc .si,.dt thead th.desc .si{opacity:1;color:#fbbf24}
 .dt tbody tr{border-bottom:1px solid rgba(245,158,11,.06);transition:background .12s}
 .dt tbody tr:nth-child(even){background:rgba(255,255,255,.012)}
-.dt tbody tr:hover{background:rgba(245,158,11,.05)}
+.dt tbody tr:hover{background:rgba(245,158,11,.04)}
 .dt tbody td{padding:9px 12px;vertical-align:middle;border-right:1px solid rgba(245,158,11,.04)}
 .dt tbody td:last-child{border-right:none}
 .tw{width:100%;max-width:100%;overflow-x:auto;border-radius:6px;-webkit-overflow-scrolling:touch}
 .card.tw,.card>.tw{overflow-x:auto;max-width:100%;contain:inline-size}
 
-/* ── Mobile player card ─────────────────────────────────────────── */
+/* ── Mobile player cards ─────────────────────────────────────────── */
 .pcard{
   background:linear-gradient(145deg,#161310,#120f0d);
-  border:1px solid rgba(245,158,11,.2);border-radius:6px;
+  border:1px solid rgba(245,158,11,.16);border-radius:6px;
   padding:13px;margin-bottom:10px;position:relative;overflow:hidden;
-  box-shadow:0 4px 18px rgba(0,0,0,.6);
-  transition:border-color .2s,box-shadow .2s;min-width:0;
+  box-shadow:0 4px 20px rgba(0,0,0,.65);
+  transition:border-color .2s,box-shadow .2s,transform .18s;min-width:0;
 }
 .pcard::before{
   content:'';position:absolute;top:0;left:0;
-  width:2.5px;height:100%;
-  background:linear-gradient(180deg,#f97316 0%,rgba(249,115,22,.2) 100%);
+  width:3px;height:100%;
+  background:linear-gradient(180deg,#f97316 0%,rgba(249,115,22,.08) 100%);
 }
-.pcard:hover{border-color:rgba(245,158,11,.4);box-shadow:0 4px 18px rgba(0,0,0,.6),0 0 14px rgba(249,115,22,.06)}
+.pcard:hover{border-color:rgba(245,158,11,.34);box-shadow:0 6px 22px rgba(0,0,0,.7),0 0 14px rgba(245,158,11,.06);transform:translateY(-1px)}
 .pcard-name{font-weight:600;font-size:.92rem;color:#fef3c7;line-height:1.2}
 .pcard-badges{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
 .pcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}
-.pcard-stat{
-  background:rgba(10,8,7,.8);border:1px solid rgba(245,158,11,.1);
-  border-radius:4px;padding:7px 5px;text-align:center;
-}
+.pcard-stat{background:rgba(10,8,7,.85);border:1px solid rgba(245,158,11,.1);border-radius:4px;padding:7px 5px;text-align:center}
 .pcard-val{font-family:'Rajdhani',sans-serif;font-weight:800;font-size:1.05rem;line-height:1}
-.pcard-lbl{font-size:.58rem;color:#57534e;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.pcard-lbl{font-size:.58rem;color:#57534e;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;font-family:'Rajdhani',sans-serif}
 .pcard-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(245,158,11,.08)}
 
-/* ── Badges ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   BADGES — Three-faction system
+   TEA:     b-tea  = amber/gold
+   ONX:     b-onx  = frost cyan
+   Academy: b-acad = bronze/copper
+   Main:    b-main = amber/gold (same as TEA)
+═══════════════════════════════════════════════════════════════════ */
 .badge{
   display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;
-  font-size:.67rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+  font-size:.67rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
   white-space:nowrap;font-family:'Rajdhani',sans-serif;
 }
-/* Origin */
-.b-cyan  {background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.35);box-shadow:0 0 6px rgba(249,115,22,.1)}
-.b-purple{background:rgba(234,88,12,.12); color:#f97316;border:1px solid rgba(234,88,12,.35);box-shadow:0 0 6px rgba(234,88,12,.1)}
-/* Placement */
-.b-green {background:rgba(245,158,11,.1); color:#fbbf24;border:1px solid rgba(245,158,11,.32)}
-.b-amber {background:rgba(251,191,36,.1); color:#fde68a;border:1px solid rgba(251,191,36,.32)}
-/* Rank / flag */
-.b-red   {background:rgba(220,38,38,.1);  color:#f87171;border:1px solid rgba(220,38,38,.32)}
-.b-blue  {background:rgba(245,158,11,.1); color:#fbbf24;border:1px solid rgba(245,158,11,.28)}
-.b-gray  {background:rgba(87,83,78,.1);   color:#a8a29e;border:1px solid rgba(87,83,78,.28)}
-.b-pink  {background:rgba(234,88,12,.1);  color:#fb923c;border:1px solid rgba(234,88,12,.28)}
+.b-tea  {background:rgba(245,158,11,.14);color:#fbbf24;border:1px solid rgba(245,158,11,.42);box-shadow:0 0 6px rgba(245,158,11,.1)}
+.b-onx  {background:rgba(56,189,248,.1); color:#38bdf8;border:1px solid rgba(56,189,248,.38);box-shadow:0 0 6px rgba(56,189,248,.1)}
+.b-acad {background:rgba(217,119,6,.12); color:#d97706;border:1px solid rgba(217,119,6,.38);box-shadow:0 0 5px rgba(217,119,6,.08)}
+.b-main {background:rgba(245,158,11,.1); color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+/* Legacy aliases for existing code */
+.b-cyan  {background:rgba(245,158,11,.14);color:#fbbf24;border:1px solid rgba(245,158,11,.42);box-shadow:0 0 6px rgba(245,158,11,.1)}
+.b-purple{background:rgba(56,189,248,.1); color:#38bdf8;border:1px solid rgba(56,189,248,.38);box-shadow:0 0 6px rgba(56,189,248,.1)}
+.b-green {background:rgba(245,158,11,.1); color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.b-blue  {background:rgba(56,189,248,.08);color:#38bdf8;border:1px solid rgba(56,189,248,.28)}
+.b-bronze{background:rgba(217,119,6,.12); color:#d97706;border:1px solid rgba(217,119,6,.35)}
+.b-amber {background:rgba(251,191,36,.1); color:#fde68a;border:1px solid rgba(251,191,36,.3)}
+.b-red   {background:rgba(220,38,38,.1);  color:#f87171;border:1px solid rgba(220,38,38,.3)}
+.b-gray  {background:rgba(87,83,78,.1);   color:#a8a29e;border:1px solid rgba(87,83,78,.25)}
+.b-pink  {background:rgba(249,115,22,.1); color:#fb923c;border:1px solid rgba(249,115,22,.28)}
 
-/* ── Inputs ─────────────────────────────────────────────────────── */
-.inp{
-  background:rgba(10,8,7,.9);border:1px solid rgba(245,158,11,.18);
-  color:#e7e5e4;border-radius:4px;padding:7px 11px;outline:none;
-  transition:border-color .2s,box-shadow .2s;font-size:.82rem;font-family:inherit;
-}
-.inp:focus{border-color:rgba(245,158,11,.5);box-shadow:0 0 0 1px rgba(245,158,11,.15)}
+/* ── Inputs ──────────────────────────────────────────────────────── */
+.inp{background:rgba(10,8,7,.9);border:1px solid rgba(245,158,11,.18);color:#e7e5e4;border-radius:4px;padding:7px 11px;outline:none;transition:border-color .2s,box-shadow .2s;font-size:.82rem;font-family:inherit}
+.inp:focus{border-color:rgba(245,158,11,.5);box-shadow:0 0 0 1px rgba(245,158,11,.14)}
 .inp-icon{padding-left:36px}
 .sw{position:relative}
 .sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#57534e}
-.fl{
-  display:block;font-size:.68rem;font-weight:700;
-  color:rgba(251,191,36,.6);
-  letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;
-  font-family:'Rajdhani',sans-serif;
-}
-.fi{
-  width:100%;background:rgba(10,8,7,.92);border:1px solid rgba(245,158,11,.18);
-  color:#e7e5e4;border-radius:4px;padding:9px 11px;outline:none;
-  font-size:.85rem;transition:border-color .2s,box-shadow .2s;font-family:inherit;
-}
+.fl{display:block;font-size:.68rem;font-weight:700;color:rgba(245,158,11,.6);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;font-family:'Rajdhani',sans-serif}
+.fi{width:100%;background:rgba(10,8,7,.92);border:1px solid rgba(245,158,11,.18);color:#e7e5e4;border-radius:4px;padding:9px 11px;outline:none;font-size:.85rem;transition:border-color .2s,box-shadow .2s;font-family:inherit}
 .fi:focus{border-color:rgba(245,158,11,.5);box-shadow:0 0 0 1px rgba(245,158,11,.12)}
 @media(max-width:767px){.fi{padding:13px 12px;font-size:1rem;min-height:44px}}
 textarea.fi{resize:vertical;min-height:72px}
 select.fi{cursor:pointer;appearance:none}
 
-/* ── Buttons ────────────────────────────────────────────────────── */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  padding:7px 14px;border-radius:4px;
-  font-size:.76rem;font-weight:700;font-family:'Rajdhani',sans-serif;
-  letter-spacing:.6px;text-transform:uppercase;
-  cursor:pointer;transition:all .18s;border:none;min-height:34px;
-}
+/* ═══════════════════════════════════════════════════════════════════
+   BUTTONS — Three-faction system
+═══════════════════════════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 14px;border-radius:4px;font-size:.76rem;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;transition:all .18s;border:none;min-height:34px}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:767px){.btn{min-height:44px}}
-
-.btn-cyan  {background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.35);color:#fb923c}
-.btn-cyan:hover:not(:disabled)  {background:rgba(249,115,22,.2);box-shadow:0 0 16px rgba(249,115,22,.2)}
-.btn-green {background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35);color:#fbbf24}
-.btn-green:hover:not(:disabled) {background:rgba(245,158,11,.2);box-shadow:0 0 16px rgba(245,158,11,.2)}
-.btn-red   {background:rgba(220,38,38,.1);  border:1px solid rgba(220,38,38,.35); color:#f87171}
+/* TEA amber */
+.btn-tea   {background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.38);color:#fbbf24}
+.btn-tea:hover:not(:disabled)   {background:rgba(245,158,11,.2);box-shadow:0 0 18px rgba(245,158,11,.2)}
+/* ONX cyan */
+.btn-onx   {background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3); color:#38bdf8}
+.btn-onx:hover:not(:disabled)   {background:rgba(56,189,248,.16);box-shadow:0 0 16px rgba(56,189,248,.18)}
+/* Academy bronze */
+.btn-acad  {background:rgba(217,119,6,.1);  border:1px solid rgba(217,119,6,.35); color:#d97706}
+.btn-acad:hover:not(:disabled)  {background:rgba(217,119,6,.2); box-shadow:0 0 16px rgba(217,119,6,.2)}
+/* Legacy aliases */
+.btn-cyan  {background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35);color:#fbbf24}
+.btn-cyan:hover:not(:disabled)  {background:rgba(245,158,11,.2);box-shadow:0 0 18px rgba(245,158,11,.2)}
+.btn-green {background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.32);color:#fbbf24}
+.btn-green:hover:not(:disabled) {background:rgba(245,158,11,.2);box-shadow:0 0 18px rgba(245,158,11,.18)}
+.btn-red   {background:rgba(220,38,38,.1);  border:1px solid rgba(220,38,38,.32); color:#f87171}
 .btn-red:hover:not(:disabled)   {background:rgba(220,38,38,.18);box-shadow:0 0 14px rgba(220,38,38,.2)}
-.btn-amber {background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.38);color:#fde68a}
-.btn-amber:hover:not(:disabled) {background:rgba(251,191,36,.2);box-shadow:0 0 16px rgba(245,158,11,.25)}
-.btn-purple{background:rgba(234,88,12,.1);  border:1px solid rgba(234,88,12,.35); color:#fb923c}
-.btn-purple:hover:not(:disabled){background:rgba(234,88,12,.2);box-shadow:0 0 14px rgba(234,88,12,.2)}
+.btn-amber {background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.36);color:#fde68a}
+.btn-amber:hover:not(:disabled) {background:rgba(251,191,36,.2);box-shadow:0 0 18px rgba(245,158,11,.22)}
+.btn-purple{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3); color:#38bdf8}
+.btn-purple:hover:not(:disabled){background:rgba(56,189,248,.16);box-shadow:0 0 16px rgba(56,189,248,.18)}
+.btn-bronze{background:rgba(217,119,6,.1);  border:1px solid rgba(217,119,6,.32); color:#d97706}
+.btn-bronze:hover:not(:disabled){background:rgba(217,119,6,.2); box-shadow:0 0 16px rgba(217,119,6,.2)}
 .btn-gray  {background:rgba(87,83,78,.1);   border:1px solid rgba(87,83,78,.28);  color:#a8a29e}
 .btn-gray:hover:not(:disabled)  {background:rgba(87,83,78,.18)}
 
-.psel{
-  background:rgba(10,8,7,.9);border:1px solid rgba(245,158,11,.22);
-  color:#e7e5e4;border-radius:4px;padding:3px 7px;
-  font-size:.7rem;font-weight:700;font-family:'Rajdhani',sans-serif;
-  cursor:pointer;outline:none;letter-spacing:.3px;text-transform:uppercase;
-}
+.psel{background:rgba(10,8,7,.9);border:1px solid rgba(245,158,11,.22);color:#e7e5e4;border-radius:4px;padding:3px 7px;font-size:.7rem;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;outline:none;letter-spacing:.3px;text-transform:uppercase}
 @media(max-width:767px){.psel{min-height:44px;padding:8px 10px;font-size:.8rem;flex:1;border-radius:4px}}
 
-/* ── Modals ─────────────────────────────────────────────────────── */
-.mbg{
-  position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(8px);
-  z-index:200;display:none;align-items:center;justify-content:center;
-  padding:16px;pointer-events:none;
-}
+/* ── Modals ──────────────────────────────────────────────────────── */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;pointer-events:none}
 .mbg.open{display:flex;pointer-events:all}
-.mbox{
-  background:linear-gradient(145deg,#1a1510,#110d0b);
-  border:1px solid rgba(245,158,11,.28);border-radius:8px;
-  width:100%;max-width:560px;max-height:92vh;
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:26px;position:relative;
-  box-shadow:0 30px 80px rgba(0,0,0,.85),0 0 40px rgba(245,158,11,.04);
-}
-.mbox::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
-  background:linear-gradient(90deg,transparent,rgba(251,191,36,.6) 35%,rgba(249,115,22,.5) 65%,transparent);
-}
+.mbox{background:linear-gradient(145deg,#1a1510,#110d0b);border:1px solid rgba(245,158,11,.24);border-radius:8px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:26px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.9)}
+.mbox::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(245,158,11,.65) 35%,rgba(56,189,248,.4) 65%,transparent)}
 .mbox.wide{max-width:740px}
-@media(max-width:767px){
-  .mbg{align-items:flex-end;padding:0}
-  .mbox{max-width:100%;border-radius:16px 16px 0 0;max-height:94vh;width:100%;
-    padding:20px 16px calc(20px + env(safe-area-inset-bottom));
-    overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .mbox.wide{max-width:100%}
-}
+@media(max-width:767px){.mbg{align-items:flex-end;padding:0}.mbox{max-width:100%;border-radius:16px 16px 0 0;max-height:94vh;width:100%;padding:20px 16px calc(20px + env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}.mbox.wide{max-width:100%}}
 
-/* ── Progress bars — bright forge fills ─────────────────────────── */
-.pb{height:6px;background:rgba(10,8,7,.9);border-radius:3px;overflow:hidden;border:1px solid rgba(245,158,11,.08)}
-.pf{
-  height:100%;border-radius:3px;
-  background:linear-gradient(90deg,#f97316 0%,#fbbf24 100%);
-  box-shadow:0 0 8px rgba(249,115,22,.35);
-  transition:width .6s ease;
-}
+/* ── Progress bars ───────────────────────────────────────────────── */
+.pb{height:6px;background:rgba(10,8,7,.9);border-radius:3px;overflow:hidden;border:1px solid rgba(245,158,11,.07)}
+.pf{height:100%;border-radius:3px;transition:width .6s ease}
 
-/* ── Tag pills ──────────────────────────────────────────────────── */
-.tpill{
-  display:inline-flex;align-items:center;padding:1px 6px;border-radius:2px;
-  font-size:.62rem;font-weight:700;letter-spacing:.3px;margin:1px;
-  font-family:'Rajdhani',sans-serif;
-}
+/* ── Tag pills ───────────────────────────────────────────────────── */
+.tpill{display:inline-flex;align-items:center;padding:1px 6px;border-radius:2px;font-size:.62rem;font-weight:700;letter-spacing:.3px;margin:1px;font-family:'Rajdhani',sans-serif}
 
-/* ── Spinner ────────────────────────────────────────────────────── */
+/* ── Spinner ─────────────────────────────────────────────────────── */
 .spin{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
 
-/* ── Toast ──────────────────────────────────────────────────────── */
-#toast{
-  position:fixed;bottom:80px;right:16px;z-index:9999;
-  padding:10px 16px;border-radius:4px;
-  font-size:.78rem;font-weight:700;font-family:'Rajdhani',sans-serif;
-  letter-spacing:.5px;text-transform:uppercase;
-  transform:translateY(70px);opacity:0;transition:all .3s;
-  pointer-events:none;max-width:280px;line-height:1.4;
-}
+/* ── Toast ───────────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:80px;right:16px;z-index:9999;padding:10px 16px;border-radius:4px;font-size:.78rem;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:.5px;text-transform:uppercase;transform:translateY(70px);opacity:0;transition:all .3s;pointer-events:none;max-width:280px;line-height:1.4}
 @media(min-width:768px){#toast{bottom:24px;right:24px;max-width:320px}}
 #toast.show{transform:translateY(0);opacity:1}
 #toast.success{background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.45);color:#fbbf24;box-shadow:0 0 20px rgba(245,158,11,.12)}
 #toast.error  {background:rgba(220,38,38,.1);  border:1px solid rgba(220,38,38,.45); color:#f87171;box-shadow:0 0 20px rgba(220,38,38,.12)}
-#toast.info   {background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.45);color:#fb923c;box-shadow:0 0 20px rgba(249,115,22,.12)}
-#toast.warn   {background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.45);color:#fde68a;box-shadow:0 0 20px rgba(251,191,36,.1)}
+#toast.info   {background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.4); color:#38bdf8;box-shadow:0 0 20px rgba(56,189,248,.1)}
+#toast.warn   {background:rgba(217,119,6,.1);   border:1px solid rgba(217,119,6,.45); color:#d97706;box-shadow:0 0 18px rgba(217,119,6,.1)}
 
-/* ── Bottom nav ─────────────────────────────────────────────────── */
-.bnav{
-  position:fixed;bottom:0;left:0;right:0;
-  background:linear-gradient(0deg,#0a0807,rgba(14,11,9,.99));
-  border-top:1px solid rgba(245,158,11,.22);z-index:100;
-  padding-bottom:env(safe-area-inset-bottom);
-  box-shadow:0 -4px 30px rgba(0,0,0,.8);
-}
+/* ── Bottom nav ──────────────────────────────────────────────────── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(0deg,#0a0807,rgba(14,11,9,.99));border-top:1px solid rgba(245,158,11,.18);z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 30px rgba(0,0,0,.85)}
 .bnav-row{display:flex;align-items:stretch}
-.bnav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:8px 4px;font-size:.56rem;color:#292524;cursor:pointer;
-  border:none;background:transparent;min-height:56px;gap:3px;
-  transition:color .2s;font-family:'Rajdhani',sans-serif;
-  font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-}
-.bnav-btn.active{color:#fbbf24;text-shadow:0 0 12px rgba(245,158,11,.6)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:.56rem;color:#292524;cursor:pointer;border:none;background:transparent;min-height:56px;gap:3px;transition:color .2s;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.bnav-btn.active{color:#fbbf24;text-shadow:0 0 14px rgba(245,158,11,.7)}
 .bnav-btn svg{width:19px;height:19px;flex-shrink:0}
 
-/* ── Admin FAB ──────────────────────────────────────────────────── */
-.fab{
-  position:fixed;bottom:72px;right:16px;z-index:90;
-  width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,#f97316,#ea580c);
-  border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 20px rgba(249,115,22,.5),0 0 0 1px rgba(245,158,11,.3);
-  transition:transform .2s,box-shadow .2s;color:#0a0807;
-}
+/* ── FAB ─────────────────────────────────────────────────────────── */
+.fab{position:fixed;bottom:72px;right:16px;z-index:90;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ea580c);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(249,115,22,.55),0 0 0 1px rgba(245,158,11,.3);transition:transform .2s,box-shadow .2s;color:#0a0807;font-size:1.1rem}
 .fab:active{transform:scale(.92)}
-.fab:hover{box-shadow:0 4px 30px rgba(249,115,22,.7),0 0 0 2px rgba(245,158,11,.45)}
+.fab:hover{box-shadow:0 4px 32px rgba(249,115,22,.75),0 0 0 2px rgba(245,158,11,.5)}
 
-/* ── Admin drawer ───────────────────────────────────────────────── */
-.drawer{
-  position:fixed;bottom:0;left:0;right:0;z-index:150;
-  background:linear-gradient(180deg,#1a1510,#100d0b);
-  border-top:1.5px solid rgba(245,158,11,.35);border-radius:18px 18px 0 0;
-  padding:20px 16px calc(80px + env(safe-area-inset-bottom));
-  max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  transform:translateY(100%);transition:transform .3s ease;pointer-events:none;
-  box-shadow:0 -12px 60px rgba(0,0,0,.9);
-}
+/* ── Drawer ──────────────────────────────────────────────────────── */
+.drawer{position:fixed;bottom:0;left:0;right:0;z-index:150;background:linear-gradient(180deg,#1a1510,#100d0b);border-top:1.5px solid rgba(245,158,11,.3);border-radius:18px 18px 0 0;padding:20px 16px calc(80px + env(safe-area-inset-bottom));max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateY(100%);transition:transform .3s ease;pointer-events:none;box-shadow:0 -12px 60px rgba(0,0,0,.92)}
 .drawer.open{transform:translateY(0);pointer-events:all}
-.drawer-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:140;
-  display:none;backdrop-filter:blur(5px);pointer-events:none;
-}
+.drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:140;display:none;backdrop-filter:blur(6px);pointer-events:none}
 .drawer-backdrop.open{display:block;pointer-events:all}
-.drawer-item{
-  display:flex;align-items:center;gap:14px;
-  padding:12px 11px;border-radius:5px;
-  cursor:pointer;transition:background .15s;
-  color:#d6d3d1;border:none;background:transparent;
-  width:100%;font-family:'Rajdhani',sans-serif;
-  font-size:.88rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
-  min-height:54px;
-}
-.drawer-item:hover,.drawer-item:active{background:rgba(245,158,11,.06);border:none}
-.drawer-icon{
-  width:36px;height:36px;border-radius:5px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
+.drawer-item{display:flex;align-items:center;gap:14px;padding:12px 11px;border-radius:5px;cursor:pointer;transition:background .15s;color:#d6d3d1;border:none;background:transparent;width:100%;font-family:'Rajdhani',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;min-height:54px}
+.drawer-item:hover,.drawer-item:active{background:rgba(245,158,11,.06)}
+.drawer-icon{width:36px;height:36px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-/* ── CSV drop zone ──────────────────────────────────────────────── */
-.dropzone{
-  border:1px dashed rgba(245,158,11,.22);border-radius:6px;
-  padding:28px;text-align:center;cursor:pointer;transition:all .2s;
-}
-.dropzone:hover,.dropzone.over{
-  border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.04);
-}
+/* ── Drop zone ───────────────────────────────────────────────────── */
+.dropzone{border:1px dashed rgba(245,158,11,.22);border-radius:6px;padding:28px;text-align:center;cursor:pointer;transition:all .2s}
+.dropzone:hover,.dropzone.over{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.04)}
 
-/* ── Admin bar: desktop only ────────────────────────────────────── */
+/* ── Admin bar mobile hide ───────────────────────────────────────── */
 @media(max-width:767px){#admin-bar{display:none!important}}
 
-/* ── Scroll & touch safety ──────────────────────────────────────── */
+/* ── Scroll & touch ──────────────────────────────────────────────── */
 .tw,.tab-scroll,.mbox,.drawer{-webkit-overflow-scrolling:touch}
 [hidden]{pointer-events:none!important}
 @media(max-width:767px){main{padding-bottom:70px}}
 
-/* ── Power colour classes ───────────────────────────────────────── */
-.pow-b {color:#fb923c;text-shadow:0 0 10px rgba(249,115,22,.4);font-weight:800} /* 1B+ */
-.pow-hi{color:#fbbf24;font-weight:700}   /* >=500M */
-.pow-md{color:#f59e0b;font-weight:700}   /* >=100M */
-.pow-lo{color:#78716c}                   /* <100M  */
+/* ── Power tiers ─────────────────────────────────────────────────── */
+.pow-b {color:#38bdf8;text-shadow:0 0 10px rgba(56,189,248,.4);font-weight:800}
+.pow-hi{color:#fbbf24;font-weight:700}
+.pow-md{color:#f59e0b;font-weight:700}
+.pow-lo{color:#78716c}
 
-/* ── TC colour classes ──────────────────────────────────────────── */
-.tc-hi{color:#fb923c}   /* 30+ */
-.tc-md{color:#f59e0b}   /* 25+ */
-.tc-lo{color:#a8a29e}   /* 20+ */
-.tc-vl{color:#57534e}   /* <20  */
+/* ── TC tiers ────────────────────────────────────────────────────── */
+.tc-hi{color:#38bdf8}
+.tc-md{color:#f59e0b}
+.tc-lo{color:#a8a29e}
+.tc-vl{color:#57534e}
 
-/* ── Section label style ────────────────────────────────────────── */
-.sec-lbl{
-  font-family:'Rajdhani',sans-serif;font-weight:700;
-  font-size:.68rem;letter-spacing:1px;text-transform:uppercase;
-  color:rgba(251,191,36,.55);
-}
+/* ── Section label ───────────────────────────────────────────────── */
+.sec-lbl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:rgba(245,158,11,.55)}
+
+/* ── Bebas Neue headers ──────────────────────────────────────────── */
+.bbns{font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px}
 </style>
 </head>
 <body>
 
-<!-- ════════ HEADER ══════════════════════════════════════════════ -->
+<!-- HEADER -->
 <header class="hdr sticky top-0 z-50">
   <div class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
     <div class="flex items-center gap-2 min-w-0">
       <div class="flex items-center gap-2 flex-shrink-0">
-        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm flex-shrink-0" style="font-family:Rajdhani,sans-serif;background:linear-gradient(135deg,rgba(249,115,22,.25),rgba(249,115,22,.08));border:1px solid rgba(249,115,22,.5);color:#fb923c;box-shadow:0 0 14px rgba(249,115,22,.25),inset 0 0 8px rgba(249,115,22,.05)">T</div>
-        <span class="font-black text-lg sm:text-xl tracking-widest" style="font-family:Rajdhani,sans-serif;letter-spacing:3px;color:#fef3c7">TEA</span>
-        <span style="color:rgba(245,158,11,.4);font-size:.85rem;margin:0 2px">&#10005;</span>
-        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm flex-shrink-0" style="font-family:Rajdhani,sans-serif;background:linear-gradient(135deg,rgba(234,88,12,.25),rgba(234,88,12,.08));border:1px solid rgba(234,88,12,.5);color:#f97316;box-shadow:0 0 14px rgba(234,88,12,.2),inset 0 0 8px rgba(234,88,12,.05)">O</div>
-        <span class="font-black text-lg sm:text-xl tracking-widest" style="font-family:Rajdhani,sans-serif;letter-spacing:3px;color:#fef3c7">ONX</span>
+        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm flex-shrink-0" style="font-family:'Bebas Neue',sans-serif;background:linear-gradient(135deg,rgba(245,158,11,.28),rgba(245,158,11,.08));border:1px solid rgba(245,158,11,.55);color:#fbbf24;box-shadow:0 0 16px rgba(245,158,11,.28)">T</div>
+        <span class="font-black text-lg sm:text-xl" style="font-family:'Bebas Neue',sans-serif;letter-spacing:4px;color:#fbbf24">TEA</span>
+        <span style="color:rgba(245,158,11,.35);font-size:.85rem;margin:0 2px">&#10005;</span>
+        <div class="w-8 h-8 rounded flex items-center justify-center font-black text-sm flex-shrink-0" style="font-family:'Bebas Neue',sans-serif;background:linear-gradient(135deg,rgba(56,189,248,.22),rgba(56,189,248,.06));border:1px solid rgba(56,189,248,.45);color:#38bdf8;box-shadow:0 0 16px rgba(56,189,248,.22)">O</div>
+        <span class="font-black text-lg sm:text-xl" style="font-family:'Bebas Neue',sans-serif;letter-spacing:4px;color:#38bdf8">ONX</span>
       </div>
       <div class="hidden sm:block h-4 w-px mx-1" style="background:rgba(245,158,11,.2)"></div>
-      <span class="hidden sm:block text-xs tracking-widest uppercase sec-lbl">Command Center</span>
+      <span class="hidden sm:block text-xs sec-lbl" style="letter-spacing:2px">Command Center</span>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
       <div class="flex items-center gap-1.5">
-        <span id="db-dot" class="dot" style="background:#d97706;box-shadow:0 0 6px rgba(217,119,6,.5)"></span>
+        <span id="db-dot" class="dot" style="background:#d97706;box-shadow:0 0 5px rgba(217,119,6,.4)"></span>
         <span id="db-txt" class="hidden sm:inline text-xs sec-lbl">Connecting</span>
+        <button id="db-retry" class="hidden btn btn-bronze text-xs" style="min-height:26px;padding:3px 10px;font-size:.65rem" onclick="retryFetch()"><i class="fa-solid fa-rotate text-xs"></i> Retry</button>
       </div>
       <div id="usr-bar" class="hidden sm:flex items-center gap-1.5" style="display:none!important">
-        <span class="dot" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.5)"></span>
+        <span class="dot" style="background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5)"></span>
         <span id="usr-email" class="text-xs font-semibold max-w-[130px] truncate" style="color:#fbbf24;font-family:Rajdhani,sans-serif"></span>
       </div>
-      <div id="admin-badge-mobile" class="hidden sm:hidden">
-        <span class="badge b-amber text-xs">Admin</span>
-      </div>
-      <button id="btn-login" class="btn btn-amber text-xs" style="min-height:32px;padding:5px 12px" onclick="openModal('m-login')">
+      <div id="admin-badge-mobile" class="hidden sm:hidden"><span class="badge b-amber text-xs">Admin</span></div>
+      <button id="btn-login" class="btn btn-tea text-xs" style="min-height:32px;padding:5px 12px" onclick="openModal('m-login')">
         <i class="fa-solid fa-shield-halved text-xs"></i>
-        <span class="hidden sm:inline">Admin Login</span>
-        <span class="sm:hidden">Login</span>
+        <span class="hidden sm:inline">Admin Login</span><span class="sm:hidden">Login</span>
       </button>
       <button id="btn-logout" class="btn btn-gray text-xs hidden" style="min-height:32px;padding:5px 12px" onclick="doLogout()">
         <i class="fa-solid fa-right-from-bracket text-xs"></i>
@@ -465,53 +387,43 @@ select.fi{cursor:pointer;appearance:none}
   </div>
 </header>
 
-<!-- ════════ ADMIN BAR (desktop only) ═══════════════════════════ -->
+<!-- ADMIN BAR (desktop) -->
 <div id="admin-bar" class="abar hidden">
   <div class="max-w-screen-2xl mx-auto px-4 py-2 flex flex-wrap items-center gap-2 min-w-0 w-full">
     <div class="flex items-center gap-2">
-      <span class="dot" style="background:#f97316;box-shadow:0 0 6px rgba(249,115,22,.5)"></span>
-      <span class="text-xs font-black tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c">COMMAND MODE</span>
+      <span class="dot dot-pulse" style="background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5)"></span>
+      <span class="text-xs font-black tracking-widest uppercase" style="font-family:'Bebas Neue',sans-serif;color:#fbbf24;letter-spacing:3px">COMMAND MODE</span>
       <span id="admin-email-bar" class="text-xs ml-1 sec-lbl font-normal normal-case tracking-normal"></span>
     </div>
     <div class="flex-1"></div>
-    <button class="btn btn-green  text-xs" onclick="openPlayerModal(null)"><i class="fa-solid fa-user-plus text-xs"></i> Enlist Player</button>
-    <button class="btn btn-cyan   text-xs" onclick="openModal('m-csv')"><i class="fa-solid fa-file-import text-xs"></i> Import CSV</button>
+    <button class="btn btn-green  text-xs" onclick="openPlayerModal(null)"><i class="fa-solid fa-user-plus text-xs"></i> Enlist</button>
+    <button class="btn btn-tea    text-xs" onclick="openModal('m-csv')"><i class="fa-solid fa-file-import text-xs"></i> Import CSV</button>
     <button class="btn btn-amber  text-xs" onclick="doExportCSV()"><i class="fa-solid fa-file-export text-xs"></i> Export CSV</button>
-    <button class="btn btn-purple text-xs" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket text-xs"></i> Logout</button>
+    <button class="btn btn-gray   text-xs" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket text-xs"></i> Logout</button>
   </div>
 </div>
 
-<!-- ════════ MAIN ════════════════════════════════════════════════ -->
+<!-- MAIN -->
 <main class="max-w-screen-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
 
-  <!-- Loading -->
-  <div id="loading-state" class="text-center py-24">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.06)">
-      <svg class="w-7 h-7 spin" style="color:#f97316" fill="none" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="50" stroke-dashoffset="15"/>
-      </svg>
+  <div id="loading-state" class="hidden text-center py-24">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(245,158,11,.22);background:rgba(245,158,11,.05)">
+      <svg class="w-7 h-7 spin" style="color:#f97316" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="50" stroke-dashoffset="15"/></svg>
     </div>
-    <p class="font-bold tracking-widest uppercase text-sm sec-lbl" style="font-size:.75rem">Establishing Secure Link</p>
-    <p class="text-xs mt-1" style="color:#44403c">phnaotocpdlrceljjqwp.supabase.co</p>
+    <p class="font-bold tracking-widest uppercase text-sm sec-lbl">Establishing Secure Link</p>
   </div>
-
-  <!-- Error -->
   <div id="error-state" class="hidden text-center py-20">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.07)">
-      <i class="fa-solid fa-triangle-exclamation text-2xl" style="color:#f87171"></i>
-    </div>
-    <p class="font-black tracking-widest uppercase text-sm mb-2" style="font-family:Rajdhani,sans-serif;color:#f87171">Connection Lost</p>
+    <i class="fa-solid fa-triangle-exclamation text-2xl mb-4" style="color:#f87171"></i>
+    <p class="bbns font-black tracking-widest uppercase text-sm mb-2" style="color:#f87171">Connection Lost</p>
     <p class="text-xs mb-5" style="color:#57534e" id="error-msg"></p>
-    <button class="btn btn-amber" onclick="init()"><i class="fa-solid fa-rotate text-xs"></i> Retry</button>
+    <button class="btn btn-amber" onclick="retryFetch()"><i class="fa-solid fa-rotate text-xs"></i> Retry</button>
   </div>
 
-  <!-- App -->
-  <div id="app" class="hidden">
-
-    <!-- KPI grid -->
+  <div id="app">
+    <!-- KPI -->
     <section id="kpi" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6"></section>
 
-    <!-- Tab bar -->
+    <!-- Tabs -->
     <div class="sticky z-30 tab-bar-bg" style="top:56px">
       <div class="tab-scroll flex">
         <button class="tb active" data-tab="ov"><i class="fa-solid fa-chart-line mr-1 text-xs"></i>Overview</button>
@@ -521,7 +433,7 @@ select.fi{cursor:pointer;appearance:none}
       </div>
     </div>
 
-    <!-- ── Overview ── -->
+    <!-- Overview -->
     <div id="tab-ov" class="tp active pt-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
         <div class="card p-4 sm:p-5">
@@ -535,7 +447,7 @@ select.fi{cursor:pointer;appearance:none}
         </div>
         <div class="card p-4 sm:p-5 sm:col-span-2 lg:col-span-1">
           <p class="sec-lbl mb-4"><i class="fa-solid fa-flag mr-1"></i>Alliance Origin</p>
-          <div id="ov-origin" class="flex flex-col gap-4"></div>
+          <div id="ov-origin" class="flex flex-col gap-3"></div>
         </div>
       </div>
       <div class="card p-4 sm:p-5 mb-3">
@@ -548,128 +460,100 @@ select.fi{cursor:pointer;appearance:none}
       </div>
     </div>
 
-    <!-- ── Main Alliance ── -->
+    <!-- Main Alliance -->
     <div id="tab-main" class="tp pt-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fbbf24">
+        <h2 class="bbns font-black text-xl sm:text-2xl tracking-widest uppercase" style="color:#fbbf24">
           <i class="fa-solid fa-shield-halved mr-1"></i>Main Alliance
-          <span class="text-xs font-bold ml-1 sec-lbl" style="letter-spacing:.5px;text-transform:none" id="cnt-main"></span>
+          <span class="text-xs font-bold ml-1 sec-lbl" style="font-family:Rajdhani,sans-serif;letter-spacing:.5px;text-transform:none" id="cnt-main"></span>
         </h2>
         <div class="flex gap-2 flex-wrap items-center">
           <div class="sw"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input class="inp inp-icon w-40 sm:w-52 text-xs" type="search" placeholder="Search roster…" id="q-main" autocomplete="off"/>
-          </div>
-          <select class="inp text-xs" id="f-origin-main" style="padding:7px 10px">
-            <option value="">All Origins</option><option value="TEA">TEA</option><option value="ONX">ONX</option>
-          </select>
+            <input class="inp inp-icon w-40 sm:w-52 text-xs" type="search" placeholder="Search roster…" id="q-main" autocomplete="off"/></div>
+          <select class="inp text-xs" id="f-origin-main" style="padding:7px 10px"><option value="">All Origins</option><option value="TEA">TEA</option><option value="ONX">ONX</option></select>
           <button class="btn btn-amber text-xs hidden sm:inline-flex" onclick="exportTabCSV('MAIN ALLIANCE')"><i class="fa-solid fa-file-export text-xs"></i> Export</button>
         </div>
       </div>
-      <div class="card tw hidden md:block">
-        <table class="dt"><thead id="th-main"></thead><tbody id="tb-main"></tbody></table>
-      </div>
+      <div class="card tw hidden md:block"><table class="dt"><thead id="th-main"></thead><tbody id="tb-main"></tbody></table></div>
       <div id="cards-main" class="md:hidden"></div>
     </div>
 
-    <!-- ── Academy ── -->
+    <!-- Academy -->
     <div id="tab-acad" class="tp pt-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c">
+        <h2 class="bbns font-black text-xl sm:text-2xl tracking-widest uppercase" style="color:#d97706">
           <i class="fa-solid fa-graduation-cap mr-1"></i>Academy
-          <span class="text-xs font-bold ml-1 sec-lbl" style="letter-spacing:.5px;text-transform:none" id="cnt-acad"></span>
+          <span class="text-xs font-bold ml-1 sec-lbl" style="font-family:Rajdhani,sans-serif;letter-spacing:.5px;text-transform:none" id="cnt-acad"></span>
         </h2>
         <div class="flex gap-2 flex-wrap items-center">
           <div class="sw"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input class="inp inp-icon w-40 sm:w-52 text-xs" type="search" placeholder="Search roster…" id="q-acad" autocomplete="off"/>
-          </div>
-          <select class="inp text-xs" id="f-origin-acad" style="padding:7px 10px">
-            <option value="">All Origins</option><option value="TEA">TEA</option><option value="ONX">ONX</option>
-          </select>
-          <button class="btn btn-cyan text-xs hidden sm:inline-flex" onclick="exportTabCSV('ACADEMY')"><i class="fa-solid fa-file-export text-xs"></i> Export</button>
+            <input class="inp inp-icon w-40 sm:w-52 text-xs" type="search" placeholder="Search roster…" id="q-acad" autocomplete="off"/></div>
+          <select class="inp text-xs" id="f-origin-acad" style="padding:7px 10px"><option value="">All Origins</option><option value="TEA">TEA</option><option value="ONX">ONX</option></select>
+          <button class="btn btn-bronze text-xs hidden sm:inline-flex" onclick="exportTabCSV('ACADEMY')"><i class="fa-solid fa-file-export text-xs"></i> Export</button>
         </div>
       </div>
-      <div class="card tw hidden md:block">
-        <table class="dt"><thead id="th-acad"></thead><tbody id="tb-acad"></tbody></table>
-      </div>
+      <div class="card tw hidden md:block"><table class="dt"><thead id="th-acad"></thead><tbody id="tb-acad"></tbody></table></div>
       <div id="cards-acad" class="md:hidden"></div>
     </div>
 
-    <!-- ── All Players ── -->
+    <!-- All Players -->
     <div id="tab-all" class="tp pt-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="font-black text-base sm:text-lg tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#e7e5e4">
+        <h2 class="bbns font-black text-xl sm:text-2xl tracking-widest uppercase" style="color:#e7e5e4">
           <i class="fa-solid fa-users mr-1"></i>All Players
-          <span class="text-xs font-bold ml-1 sec-lbl" style="letter-spacing:.5px;text-transform:none" id="cnt-all"></span>
+          <span class="text-xs font-bold ml-1 sec-lbl" style="font-family:Rajdhani,sans-serif;letter-spacing:.5px;text-transform:none" id="cnt-all"></span>
         </h2>
         <div class="flex gap-2 flex-wrap items-center">
           <div class="sw"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input class="inp inp-icon w-40 sm:w-52 text-xs" type="search" placeholder="Search roster…" id="q-all" autocomplete="off"/>
-          </div>
-          <select class="inp text-xs" id="f-place-all" style="padding:7px 10px">
-            <option value="">All Placements</option>
-            <option value="MAIN ALLIANCE">Main Alliance</option>
-            <option value="ACADEMY">Academy</option>
-          </select>
-          <select class="inp text-xs" id="f-origin-all" style="padding:7px 10px">
-            <option value="">All Origins</option><option value="TEA">TEA</option><option value="ONX">ONX</option>
-          </select>
-          <button class="btn btn-cyan text-xs hidden sm:inline-flex" onclick="doExportCSV()"><i class="fa-solid fa-file-export text-xs"></i> Export</button>
+            <input class="inp inp-icon w-40 sm:w-52 text-xs" type="search" placeholder="Search roster…" id="q-all" autocomplete="off"/></div>
+          <select class="inp text-xs" id="f-place-all" style="padding:7px 10px"><option value="">All Placements</option><option value="MAIN ALLIANCE">Main Alliance</option><option value="ACADEMY">Academy</option></select>
+          <select class="inp text-xs" id="f-origin-all" style="padding:7px 10px"><option value="">All Origins</option><option value="TEA">TEA</option><option value="ONX">ONX</option></select>
+          <button class="btn btn-tea text-xs hidden sm:inline-flex" onclick="doExportCSV()"><i class="fa-solid fa-file-export text-xs"></i> Export</button>
         </div>
       </div>
-      <div class="card tw hidden md:block">
-        <table class="dt"><thead id="th-all"></thead><tbody id="tb-all"></tbody></table>
-      </div>
+      <div class="card tw hidden md:block"><table class="dt"><thead id="th-all"></thead><tbody id="tb-all"></tbody></table></div>
       <div id="cards-all" class="md:hidden"></div>
     </div>
-
-  </div><!-- /#app -->
+  </div>
 </main>
 
-<!-- ════════ MOBILE BOTTOM NAV ══════════════════════════════════ -->
+<!-- BOTTOM NAV -->
 <nav class="bnav md:hidden" id="bottom-nav">
   <div class="bnav-row">
     <button class="bnav-btn active" data-tab="ov" onclick="switchTab('ov')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      Intel
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Intel
     </button>
     <button class="bnav-btn" data-tab="main" onclick="switchTab('main')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      Main
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Main
     </button>
     <button class="bnav-btn" data-tab="acad" onclick="switchTab('acad')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" fill="none" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
-      Academy
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" fill="none" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>Academy
     </button>
     <button class="bnav-btn" data-tab="all" onclick="switchTab('all')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      All
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>All
     </button>
   </div>
 </nav>
 
-<!-- ════════ ADMIN FAB ═══════════════════════════════════════════ -->
-<button id="admin-fab" class="fab md:hidden hidden" onclick="openDrawer()" aria-label="Command Menu">
-  <i class="fa-solid fa-sliders"></i>
-</button>
+<!-- FAB -->
+<button id="admin-fab" class="fab md:hidden hidden" onclick="openDrawer()"><i class="fa-solid fa-sliders"></i></button>
 <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
 
-<!-- ════════ ADMIN DRAWER ════════════════════════════════════════ -->
+<!-- DRAWER -->
 <div id="admin-drawer" class="drawer">
   <div class="flex items-center justify-between mb-5">
-    <div>
-      <p class="sec-lbl"><i class="fa-solid fa-shield-halved mr-1"></i>Command Panel</p>
-      <p class="text-xs mt-0.5 sec-lbl font-normal normal-case tracking-normal" id="drawer-email"></p>
-    </div>
+    <div><p class="sec-lbl"><i class="fa-solid fa-shield-halved mr-1"></i>Command Panel</p>
+      <p class="text-xs mt-0.5 sec-lbl font-normal normal-case tracking-normal" id="drawer-email"></p></div>
     <button onclick="closeDrawer()" class="text-xl w-10 h-10 flex items-center justify-center rounded" style="color:#57534e;background:rgba(245,158,11,.06)">&times;</button>
   </div>
   <div class="space-y-1">
     <button class="drawer-item" onclick="closeDrawer();openPlayerModal(null)">
       <div class="drawer-icon" style="background:rgba(245,158,11,.12);color:#fbbf24"><i class="fa-solid fa-user-plus"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Enlist Player</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Add a new soldier to the roster</p></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Enlist Player</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Add a new soldier</p></div>
     </button>
     <button class="drawer-item" onclick="closeDrawer();openModal('m-csv')">
       <div class="drawer-icon" style="background:rgba(249,115,22,.12);color:#fb923c"><i class="fa-solid fa-file-import"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Import CSV</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Bulk-import roster from file</p></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Import CSV</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Bulk-import roster</p></div>
     </button>
     <button class="drawer-item" onclick="closeDrawer();doExportCSV()">
       <div class="drawer-icon" style="background:rgba(251,191,36,.1);color:#fde68a"><i class="fa-solid fa-file-export"></i></div>
@@ -677,69 +561,45 @@ select.fi{cursor:pointer;appearance:none}
     </button>
     <button class="drawer-item" onclick="closeDrawer();doLogout()">
       <div class="drawer-icon" style="background:rgba(220,38,38,.12);color:#f87171"><i class="fa-solid fa-right-from-bracket"></i></div>
-      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Logout</p><p class="text-xs font-normal normal-case sec-lbl" style="letter-spacing:.3px">Exit command mode</p></div>
+      <div class="text-left"><p class="text-sm" style="color:#e7e5e4">Logout</p></div>
     </button>
   </div>
 </div>
 
-<!-- ════════ MODALS ══════════════════════════════════════════════ -->
-<!-- Login -->
+<!-- MODALS -->
 <div id="m-login" class="mbg" onclick="bgClick(event,'m-login')">
   <div class="mbox" style="max-width:400px">
     <div class="flex items-center justify-between mb-5">
-      <div>
-        <h2 class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fbbf24"><i class="fa-solid fa-shield-halved mr-1"></i>Authentication</h2>
-        <p class="text-xs mt-0.5 sec-lbl">Command access required</p>
-      </div>
+      <div><h2 class="bbns font-black text-2xl" style="color:#fbbf24"><i class="fa-solid fa-shield-halved mr-1"></i>Authentication</h2>
+        <p class="text-xs mt-0.5 sec-lbl">Command access required</p></div>
       <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-login')">&times;</button>
     </div>
     <div class="space-y-4">
-      <div><label class="fl">Email</label>
-        <input id="l-email" class="fi" type="email" placeholder="commander@alliance.com" autocomplete="email" inputmode="email"/></div>
-      <div><label class="fl">Password</label>
-        <input id="l-pass" class="fi" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+      <div><label class="fl">Email</label><input id="l-email" class="fi" type="email" placeholder="commander@alliance.com" autocomplete="email" inputmode="email"/></div>
+      <div><label class="fl">Password</label><input id="l-pass" class="fi" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
       <div id="l-err" class="hidden text-xs rounded px-3 py-2" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:#f87171;font-family:Rajdhani,sans-serif"></div>
-      <button id="l-btn" class="btn btn-amber w-full" onclick="doLogin()">
-        <i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command
-      </button>
+      <button id="l-btn" class="btn btn-tea w-full" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command</button>
     </div>
   </div>
 </div>
 
-<!-- Add/Edit Player -->
 <div id="m-player" class="mbg" onclick="bgClick(event,'m-player')">
   <div class="mbox">
     <div class="flex items-center justify-between mb-5">
-      <h2 id="pm-title" class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c">Enlist Player</h2>
-      <button class="text-2xl w-10 h-10 flex items-center justify-content-center" style="color:#57534e" onclick="closeModal('m-player')">&times;</button>
+      <h2 id="pm-title" class="bbns font-black text-2xl" style="color:#fb923c">Enlist Player</h2>
+      <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-player')">&times;</button>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div class="sm:col-span-2"><label class="fl">Soldier Name *</label>
-        <input id="p-name" class="fi" type="text" placeholder="In-game callsign" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
-      <div><label class="fl">Origin</label>
-        <select id="p-origin" class="fi"><option value="TEA">TEA</option><option value="ONX">ONX</option></select></div>
-      <div><label class="fl">Rank</label>
-        <select id="p-rank" class="fi"><option value="R5">R5 — Commander</option><option value="R4">R4 — Officer</option><option value="R3" selected>R3 — Soldier</option><option value="R2">R2 — Recruit</option><option value="R1">R1 — Initiate</option></select></div>
-      <div><label class="fl">Power (Millions)</label>
-        <input id="p-power" class="fi" type="number" inputmode="decimal" step="0.1" min="0" placeholder="e.g. 45.5"/></div>
-      <div><label class="fl">Town Center (TC)</label>
-        <input id="p-tc" class="fi" type="number" inputmode="numeric" min="1" max="35" placeholder="e.g. 28"/></div>
-      <div><label class="fl">Assignment</label>
-        <select id="p-place" class="fi"><option value="MAIN ALLIANCE">Main Alliance</option><option value="ACADEMY">Academy</option></select></div>
+      <div class="sm:col-span-2"><label class="fl">Soldier Name *</label><input id="p-name" class="fi" type="text" placeholder="In-game callsign" autocomplete="off" autocorrect="off" spellcheck="false"/></div>
+      <div><label class="fl">Origin</label><select id="p-origin" class="fi"><option value="TEA">TEA</option><option value="ONX">ONX</option></select></div>
+      <div><label class="fl">Rank</label><select id="p-rank" class="fi"><option value="R5">R5 — Commander</option><option value="R4">R4 — Officer</option><option value="R3" selected>R3 — Soldier</option><option value="R2">R2 — Recruit</option><option value="R1">R1 — Initiate</option></select></div>
+      <div><label class="fl">Power (Millions)</label><input id="p-power" class="fi" type="number" inputmode="decimal" step="0.1" min="0" placeholder="e.g. 45.5"/></div>
+      <div><label class="fl">Town Center (TC)</label><input id="p-tc" class="fi" type="number" inputmode="numeric" min="1" max="35" placeholder="e.g. 28"/></div>
+      <div><label class="fl">Assignment</label><select id="p-place" class="fi"><option value="MAIN ALLIANCE">Main Alliance</option><option value="ACADEMY">Academy</option></select></div>
       <div><label class="fl">Status Flag</label>
-        <select id="p-flag" class="fi">
-          <option value="">None</option>
-          <option value="ACTIVE MEMBER">Active Member</option><option value="EXCEPTION">Exception</option>
-          <option value="EVALUATE">Evaluate</option><option value="DEVELOP">Develop</option>
-          <option value="NEW PLAYER">New Player</option><option value="PENDING MOVE">Pending Move</option>
-          <option value="RALLY LEADER">Rally Leader</option><option value="INACTIVE">Inactive</option>
-          <option value="HEALTH / LEAVE">Health / Leave</option><option value="CAMEBACK NOW">Cameback Now</option>
-          <option value="SMURF / FARM">Smurf / Farm</option>
-        </select></div>
-      <div class="sm:col-span-2"><label class="fl">Tags <span style="color:#44403c;font-weight:400;text-transform:none">(comma-separated)</span></label>
-        <input id="p-tags" class="fi" type="text" placeholder="e.g. Rally Leader, Veteran, R5" autocomplete="off"/></div>
-      <div class="sm:col-span-2"><label class="fl">Field Notes</label>
-        <textarea id="p-notes" class="fi" placeholder="Intel notes…"></textarea></div>
+        <select id="p-flag" class="fi"><option value="">None</option><option value="ACTIVE MEMBER">Active Member</option><option value="EXCEPTION">Exception</option><option value="EVALUATE">Evaluate</option><option value="DEVELOP">Develop</option><option value="NEW PLAYER">New Player</option><option value="PENDING MOVE">Pending Move</option><option value="RALLY LEADER">Rally Leader</option><option value="INACTIVE">Inactive</option><option value="HEALTH / LEAVE">Health / Leave</option><option value="CAMEBACK NOW">Cameback Now</option><option value="SMURF / FARM">Smurf / Farm</option></select></div>
+      <div class="sm:col-span-2"><label class="fl">Tags <span style="color:#44403c;font-weight:400;text-transform:none">(comma-separated)</span></label><input id="p-tags" class="fi" type="text" placeholder="e.g. Rally Leader, Veteran" autocomplete="off"/></div>
+      <div class="sm:col-span-2"><label class="fl">Field Notes</label><textarea id="p-notes" class="fi" placeholder="Intel notes…"></textarea></div>
     </div>
     <div id="pm-err" class="hidden mt-3 text-xs rounded px-3 py-2" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:#f87171;font-family:Rajdhani,sans-serif"></div>
     <div class="flex gap-3 mt-4">
@@ -749,15 +609,12 @@ select.fi{cursor:pointer;appearance:none}
   </div>
 </div>
 
-<!-- Delete -->
 <div id="m-del" class="mbg" onclick="bgClick(event,'m-del')">
   <div class="mbox" style="max-width:400px">
-    <h2 class="font-black text-xl tracking-widest uppercase mb-2" style="font-family:Rajdhani,sans-serif;color:#f87171"><i class="fa-solid fa-skull-crossbones mr-1"></i>Discharge</h2>
+    <h2 class="bbns font-black text-2xl mb-2" style="color:#f87171"><i class="fa-solid fa-skull-crossbones mr-1"></i>Discharge</h2>
     <p class="text-xs mb-1 sec-lbl">Permanently remove from roster:</p>
-    <p class="font-black text-base mb-4 tracking-wide" style="color:#fef3c7;font-family:Rajdhani,sans-serif" id="del-name"></p>
-    <div class="rounded px-3 py-2 text-xs mb-5" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#fca5a5">
-      <i class="fa-solid fa-triangle-exclamation mr-1"></i>This action is <strong>permanent</strong> and cannot be reversed.
-    </div>
+    <p class="bbns font-black text-xl mb-4" style="color:#fef3c7" id="del-name"></p>
+    <div class="rounded px-3 py-2 text-xs mb-5" style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#fca5a5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>This action is <strong>permanent</strong>.</div>
     <div class="flex gap-3">
       <button id="del-btn" class="btn btn-red flex-1" onclick="confirmDelete()"><i class="fa-solid fa-trash text-xs"></i> Confirm Discharge</button>
       <button class="btn btn-gray flex-1" onclick="closeModal('m-del')">Abort</button>
@@ -765,14 +622,11 @@ select.fi{cursor:pointer;appearance:none}
   </div>
 </div>
 
-<!-- CSV Import -->
 <div id="m-csv" class="mbg" onclick="bgClick(event,'m-csv')">
   <div class="mbox wide">
     <div class="flex items-center justify-between mb-4">
-      <div>
-        <h2 class="font-black text-xl tracking-widest uppercase" style="font-family:Rajdhani,sans-serif;color:#fb923c"><i class="fa-solid fa-file-import mr-1"></i>Import Roster</h2>
-        <p class="text-xs mt-0.5 sec-lbl">Bulk-import or update soldiers via CSV</p>
-      </div>
+      <div><h2 class="bbns font-black text-2xl" style="color:#fb923c"><i class="fa-solid fa-file-import mr-1"></i>Import Roster</h2>
+        <p class="text-xs mt-0.5 sec-lbl">Bulk-import or update soldiers via CSV</p></div>
       <button class="text-2xl w-10 h-10 flex items-center justify-center" style="color:#57534e" onclick="closeModal('m-csv');resetCSV()">&times;</button>
     </div>
     <div id="csv-dz" class="dropzone mb-4" onclick="document.getElementById('csv-file').click()">
@@ -781,14 +635,8 @@ select.fi{cursor:pointer;appearance:none}
       <p class="text-sm font-bold sec-lbl">TAP TO SELECT OR DROP A CSV FILE</p>
       <p class="text-xs mt-1" style="color:#292524">.csv / .txt — max 10 MB</p>
     </div>
-    <div id="csv-map-wrap" class="hidden mb-4">
-      <p class="sec-lbl mb-3">Column Mapping</p>
-      <div id="csv-map-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-    </div>
-    <div id="csv-prev-wrap" class="hidden mb-4">
-      <p class="sec-lbl mb-2">Preview (5 rows)</p>
-      <div class="tw card"><div id="csv-prev-tbl"></div></div>
-    </div>
+    <div id="csv-map-wrap" class="hidden mb-4"><p class="sec-lbl mb-3">Column Mapping</p><div id="csv-map-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></div>
+    <div id="csv-prev-wrap" class="hidden mb-4"><p class="sec-lbl mb-2">Preview (5 rows)</p><div class="tw card"><div id="csv-prev-tbl"></div></div></div>
     <p id="csv-stats" class="hidden text-xs mb-3 sec-lbl"></p>
     <div class="flex gap-3">
       <button id="csv-go" class="btn btn-green hidden flex-1" onclick="doImport()"><i class="fa-solid fa-file-import text-xs"></i> Deploy to Supabase</button>
@@ -799,75 +647,40 @@ select.fi{cursor:pointer;appearance:none}
 
 <div id="toast"></div>
 
-<!-- ════════ JAVASCRIPT ══════════════════════════════════════════ -->
 <script>
 'use strict';
+const SUPA_URL='https://phnaotocpdlrceljjqwp.supabase.co';
+const SUPA_KEY='sb_publishable_9RZr4WnwL2iuv80z1Avfow_deTXvkRJ';
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
-const SUPA_URL = 'https://phnaotocpdlrceljjqwp.supabase.co';
-const SUPA_KEY = 'sb_publishable_9RZr4WnwL2iuv80z1Avfow_deTXvkRJ';
-const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-
-const S = {
-  players:[],isAdmin:false,user:null,
-  editingId:null,delTarget:null,
+const S={
+  players:[],isAdmin:false,user:null,editingId:null,delTarget:null,
   sort:{main:{col:'power',dir:-1},acad:{col:'power',dir:-1},all:{col:'power',dir:-1}},
   filters:{main:{q:'',origin:''},acad:{q:'',origin:''},all:{q:'',placement:'',origin:''}},
 };
 
-/* ── Power formatting ───────────────────────────────────────────── */
-function fmtPow(val){
-  var n=parseFloat(val)||0;
-  if(n<=0) return '0M';
-  if(n>=1000){var s=(n/1000).toFixed(2).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');return s+'B';}
-  var s=n.toFixed(1);if(s.endsWith('.0'))s=s.slice(0,-2);return s+'M';
-}
-function powClass(n){
-  var v=parseFloat(n)||0;
-  if(v>=1000)return 'pow-b';if(v>=500)return 'pow-hi';if(v>=100)return 'pow-md';return 'pow-lo';
-}
-function tcClass(n){
-  var v=parseInt(n)||0;
-  if(v>=30)return 'tc-hi';if(v>=25)return 'tc-md';if(v>=20)return 'tc-lo';return 'tc-vl';
-}
+function fmtPow(val){var n=parseFloat(val)||0;if(n<=0)return '0M';if(n>=1000){var s=(n/1000).toFixed(2).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');return s+'B';}var s=n.toFixed(1);if(s.endsWith('.0'))s=s.slice(0,-2);return s+'M';}
+function powClass(n){var v=parseFloat(n)||0;if(v>=1000)return 'pow-b';if(v>=500)return 'pow-hi';if(v>=100)return 'pow-md';return 'pow-lo';}
+function tcClass(n){var v=parseInt(n)||0;if(v>=30)return 'tc-hi';if(v>=25)return 'tc-md';if(v>=20)return 'tc-lo';return 'tc-vl';}
 
-/* ── Payload sanitiser ──────────────────────────────────────────── */
 function sanitisePayload(raw){
   var COLS=['name','origin','rank','power','tc','placement','flag','tags','notes'];
   var out={};
-  COLS.forEach(function(k){
-    if(!(k in raw))return;
-    var v=raw[k];
-    if(k==='power'){out[k]=parseFloat(v)||0;return;}
-    if(k==='tc')  {out[k]=parseInt(v,10)||0;return;}
-    out[k]=(v===null||v===undefined)?'':String(v).trim();
-  });
+  COLS.forEach(function(k){if(!(k in raw))return;var v=raw[k];if(k==='power'){out[k]=parseFloat(v)||0;return;}if(k==='tc'){out[k]=parseInt(v,10)||0;return;}out[k]=(v===null||v===undefined)?'':String(v).trim();});
   return out;
 }
+function fmtDbError(err){var msg=(err&&err.message)?err.message:String(err);if(msg.toLowerCase().includes('schema cache'))return 'Schema mismatch: verify 9 columns exist.';if(msg.includes('not-null constraint'))return 'Required field missing.';if(msg.includes('duplicate key value'))return 'A soldier with this name already exists.';if(msg.toLowerCase().includes('no unique')||msg.toLowerCase().includes('on conflict'))return 'Upsert failed: add UNIQUE constraint on name column.';return msg;}
 
-function fmtDbError(err){
-  var msg=(err&&err.message)?err.message:String(err);
-  if(msg.toLowerCase().includes('schema cache')) return 'Schema mismatch: verify 9 columns exist.';
-  if(msg.includes('not-null constraint')) return 'Required field missing — Soldier Name is required.';
-  if(msg.includes('duplicate key value')) return 'A soldier with this name already exists.';
-  if(msg.toLowerCase().includes('no unique')||msg.toLowerCase().includes('on conflict'))
-    return 'Upsert failed: ALTER TABLE players ADD CONSTRAINT players_name_unique UNIQUE (name);';
-  return msg;
-}
-
-/* ── Auth ───────────────────────────────────────────────────────── */
+/* Auth */
 async function doLogin(){
-  var email=document.getElementById('l-email').value.trim();
-  var pass =document.getElementById('l-pass').value;
-  var errEl=document.getElementById('l-err');
-  var btn  =document.getElementById('l-btn');
-  if(!email||!pass){showEl('l-err','Fill in both fields to proceed.');return;}
-  btn.disabled=true;btn.textContent='Authenticating…';errEl.classList.add('hidden');
+  var email=document.getElementById('l-email').value.trim(),pass=document.getElementById('l-pass').value;
+  var errEl=document.getElementById('l-err'),btn=document.getElementById('l-btn');
+  if(!email||!pass){showEl('l-err','Fill in both fields.');return;}
+  btn.disabled=true;btn.textContent='Authenticating\u2026';errEl.classList.add('hidden');
   var {error}=await sb.auth.signInWithPassword({email,password:pass});
-  btn.disabled=false;
-  btn.innerHTML='<i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command';
+  btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-right-to-bracket text-xs"></i> Access Command';
   if(error){showEl('l-err',error.message);return;}
-  closeModal('m-login');
-  document.getElementById('l-email').value='';document.getElementById('l-pass').value='';
+  closeModal('m-login');document.getElementById('l-email').value='';document.getElementById('l-pass').value='';
   toast('Welcome back, Commander!','success');
 }
 async function doLogout(){await sb.auth.signOut();toast('Signed out.','info');}
@@ -879,50 +692,30 @@ function applyAuthState(user){
   document.getElementById('btn-logout').classList.toggle('hidden',!S.isAdmin);
   document.getElementById('admin-bar').classList.toggle('hidden',!S.isAdmin);
   document.getElementById('admin-fab').classList.toggle('hidden',!S.isAdmin);
-  var ub=document.getElementById('usr-bar');
-  var mb=document.getElementById('admin-badge-mobile');
-  if(S.isAdmin&&user){
-    ub.style.display='flex';mb.classList.remove('hidden');
-    document.getElementById('usr-email').textContent=user.email;
-    document.getElementById('admin-email-bar').textContent=user.email;
-    document.getElementById('drawer-email').textContent=user.email;
-  } else {ub.style.display='none';mb.classList.add('hidden');}
+  var ub=document.getElementById('usr-bar'),mb=document.getElementById('admin-badge-mobile');
+  if(S.isAdmin&&user){ub.style.display='flex';mb.classList.remove('hidden');document.getElementById('usr-email').textContent=user.email;document.getElementById('admin-email-bar').textContent=user.email;document.getElementById('drawer-email').textContent=user.email;}
+  else{ub.style.display='none';mb.classList.add('hidden');}
   renderAll();
 }
 
-/* ── Database ───────────────────────────────────────────────────── */
+/* Database */
 async function fetchPlayers(){
   setDbStatus('loading');
   var {data,error}=await sb.from('players').select('*').order('power',{ascending:false});
   if(error){setDbStatus('error');throw error;}
   S.players=data||[];setDbStatus('ok');
 }
-async function dbCreate(payload){
-  var clean=sanitisePayload(payload);
-  var {data,error}=await sb.from('players').upsert([clean],{onConflict:'name'}).select().single();
-  if(error) throw new Error(fmtDbError(error));
-  return data;
-}
-async function dbUpdate(id,payload){
-  var clean=sanitisePayload(payload);
-  var {data,error}=await sb.from('players').update(clean).eq('id',id).select().single();
-  if(error) throw new Error(fmtDbError(error));
-  return data;
-}
-async function dbDelete(id){
-  var {error}=await sb.from('players').delete().eq('id',id);
-  if(error) throw new Error(fmtDbError(error));
-}
+async function dbCreate(payload){var clean=sanitisePayload(payload);var {data,error}=await sb.from('players').upsert([clean],{onConflict:'name'}).select().single();if(error)throw new Error(fmtDbError(error));return data;}
+async function dbUpdate(id,payload){var clean=sanitisePayload(payload);var {data,error}=await sb.from('players').update(clean).eq('id',id).select().single();if(error)throw new Error(fmtDbError(error));return data;}
+async function dbDelete(id){var {error}=await sb.from('players').delete().eq('id',id);if(error)throw new Error(fmtDbError(error));}
 async function quickPlace(id,placement){
   var {error}=await sb.from('players').update({placement:String(placement)}).eq('id',id);
   if(error){toast('Transfer failed: '+fmtDbError(error),'error');return;}
-  var p=S.players.find(function(x){return x.id===id;});
-  if(p) p.placement=placement;
-  renderAll();
+  var p=S.players.find(function(x){return x.id===id;});if(p)p.placement=placement;renderAll();
   toast((p?p.name:'Player')+' \u2192 '+(placement==='MAIN ALLIANCE'?'Main Alliance':'Academy'),'success');
 }
 
-/* ── Player modal ───────────────────────────────────────────────── */
+/* Player modal */
 function openPlayerModal(player){
   S.editingId=player?player.id:null;
   document.getElementById('pm-title').textContent=player?'Edit Soldier':'Enlist Player';
@@ -936,159 +729,61 @@ function openPlayerModal(player){
   document.getElementById('p-flag').value  =player?(player.flag  ||''):'';
   document.getElementById('p-tags').value  =player?(player.tags  ||''):'';
   document.getElementById('p-notes').value =player?(player.notes ||''):'';
-  openModal('m-player');
-  setTimeout(function(){document.getElementById('p-name').focus();},120);
+  openModal('m-player');setTimeout(function(){document.getElementById('p-name').focus();},120);
 }
 async function savePlayer(){
   var name=document.getElementById('p-name').value.trim();
   if(!name){showEl('pm-err','Callsign is required.');return;}
-  var payload={
-    name,origin:document.getElementById('p-origin').value,rank:document.getElementById('p-rank').value,
-    power:parseFloat(document.getElementById('p-power').value)||0,
-    tc:parseInt(document.getElementById('p-tc').value,10)||0,
-    placement:document.getElementById('p-place').value,flag:document.getElementById('p-flag').value,
-    tags:document.getElementById('p-tags').value.trim(),notes:document.getElementById('p-notes').value.trim(),
-  };
-  var btn=document.getElementById('pm-save');
-  btn.disabled=true;btn.textContent='Deploying\u2026';
+  var payload={name,origin:document.getElementById('p-origin').value,rank:document.getElementById('p-rank').value,power:parseFloat(document.getElementById('p-power').value)||0,tc:parseInt(document.getElementById('p-tc').value,10)||0,placement:document.getElementById('p-place').value,flag:document.getElementById('p-flag').value,tags:document.getElementById('p-tags').value.trim(),notes:document.getElementById('p-notes').value.trim()};
+  var btn=document.getElementById('pm-save');btn.disabled=true;btn.textContent='Deploying\u2026';
   try{
-    if(S.editingId){
-      var updated=await dbUpdate(S.editingId,payload);
-      var idx=S.players.findIndex(function(p){return p.id===S.editingId;});
-      if(idx!==-1)S.players[idx]=Object.assign({},S.players[idx],updated);
-      toast(name+' updated!','success');
-    } else {
-      var created=await dbCreate(payload);
-      S.players.unshift(created);
-      toast(name+' enlisted!','success');
-    }
+    if(S.editingId){var updated=await dbUpdate(S.editingId,payload);var idx=S.players.findIndex(function(p){return p.id===S.editingId;});if(idx!==-1)S.players[idx]=Object.assign({},S.players[idx],updated);toast(name+' updated!','success');}
+    else{var created=await dbCreate(payload);S.players.unshift(created);toast(name+' enlisted!','success');}
     closeModal('m-player');renderAll();
-  } catch(err){showEl('pm-err',err.message);}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<i class="fa-solid fa-check text-xs"></i> Confirm Enlistment';
-  }
+  }catch(err){showEl('pm-err',err.message);}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-check text-xs"></i> Confirm Enlistment';}
 }
 
-/* ── Delete modal ───────────────────────────────────────────────── */
-function openDeleteModal(player){
-  S.delTarget=player;
-  document.getElementById('del-name').textContent=player.name;
-  openModal('m-del');
-}
+/* Delete */
+function openDeleteModal(player){S.delTarget=player;document.getElementById('del-name').textContent=player.name;openModal('m-del');}
 async function confirmDelete(){
-  if(!S.delTarget)return;
-  var btn=document.getElementById('del-btn');
-  btn.disabled=true;btn.textContent='Discharging\u2026';
-  try{
-    await dbDelete(S.delTarget.id);
-    S.players=S.players.filter(function(p){return p.id!==S.delTarget.id;});
-    toast(S.delTarget.name+' discharged.','info');
-    closeModal('m-del');renderAll();
-  } catch(err){toast('Failed: '+err.message,'error');}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<i class="fa-solid fa-trash text-xs"></i> Confirm Discharge';
-    S.delTarget=null;
-  }
+  if(!S.delTarget)return;var btn=document.getElementById('del-btn');btn.disabled=true;btn.textContent='Discharging\u2026';
+  try{await dbDelete(S.delTarget.id);S.players=S.players.filter(function(p){return p.id!==S.delTarget.id;});toast(S.delTarget.name+' discharged.','info');closeModal('m-del');renderAll();}
+  catch(err){toast('Failed: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-trash text-xs"></i> Confirm Discharge';S.delTarget=null;}
 }
 
-/* ── CSV Export ─────────────────────────────────────────────────── */
-function doExportCSV(subset){
-  var rows=(subset||S.players).map(function(p){
-    return{Name:p.name||'',Origin:p.origin||'',Rank:p.rank||'',
-      'Power (M)':p.power||0,TC:p.tc||0,Placement:p.placement||'',
-      Flag:p.flag||'',Tags:p.tags||'',Notes:p.notes||''};
-  });
-  dlBlob(Papa.unparse(rows),'alliance_roster_'+isoDate()+'.csv','text/csv');
-  toast('CSV exported ('+rows.length+' soldiers)','success');
-}
+/* CSV Export */
+function doExportCSV(subset){var rows=(subset||S.players).map(function(p){return{Name:p.name||'',Origin:p.origin||'',Rank:p.rank||'','Power (M)':p.power||0,TC:p.tc||0,Placement:p.placement||'',Flag:p.flag||'',Tags:p.tags||'',Notes:p.notes||''};});dlBlob(Papa.unparse(rows),'alliance_roster_'+isoDate()+'.csv','text/csv');toast('CSV exported ('+rows.length+' soldiers)','success');}
 function exportTabCSV(placement){doExportCSV(S.players.filter(function(p){return p.placement===placement;}));}
 
-/* ── CSV Import ─────────────────────────────────────────────────── */
+/* CSV Import */
 var _csvRows=[],_csvFields=[],_csvMap={};
 var DB_FIELDS=['name','origin','rank','power','tc','placement','flag','tags','notes'];
-
-function onCSVFile(file){
-  if(!file)return;
-  Papa.parse(file,{header:true,skipEmptyLines:true,
-    complete:function(res){_csvRows=res.data;_csvFields=res.meta.fields||[];autoMap();renderCSVPreview();},
-    error:function(e){toast('Parse error: '+e.message,'error');}
-  });
-}
-function autoMap(){
-  _csvMap={};
-  DB_FIELDS.forEach(function(field){
-    var match=_csvFields.find(function(h){
-      var hl=h.toLowerCase().replace(/[^a-z0-9]/g,'');var fl=field.toLowerCase();
-      return hl===fl||hl.startsWith(fl)||fl.startsWith(hl);
-    });
-    if(match) _csvMap[field]=match;
-  });
-}
+function onCSVFile(file){if(!file)return;Papa.parse(file,{header:true,skipEmptyLines:true,complete:function(res){_csvRows=res.data;_csvFields=res.meta.fields||[];autoMap();renderCSVPreview();},error:function(e){toast('Parse error: '+e.message,'error');}});}
+function autoMap(){_csvMap={};DB_FIELDS.forEach(function(field){var match=_csvFields.find(function(h){var hl=h.toLowerCase().replace(/[^a-z0-9]/g,'');var fl=field.toLowerCase();return hl===fl||hl.startsWith(fl)||fl.startsWith(hl);});if(match)_csvMap[field]=match;});}
 function renderCSVPreview(){
-  document.getElementById('csv-map-grid').innerHTML=DB_FIELDS.map(function(f){
-    var opts='<option value="">-- skip --</option>'+_csvFields.map(function(h){
-      return '<option value="'+esc(h)+'"'+(_csvMap[f]===h?' selected':'')+'>'+esc(h)+'</option>';
-    }).join('');
-    return '<div><label class="fl text-xs">'+f.toUpperCase()+'</label>'+
-      '<select class="fi text-xs" style="padding:6px 10px" onchange="_csvMap[\''+f+'\']=this.value">'+opts+'</select></div>';
-  }).join('');
+  document.getElementById('csv-map-grid').innerHTML=DB_FIELDS.map(function(f){var opts='<option value="">-- skip --</option>'+_csvFields.map(function(h){return '<option value="'+esc(h)+'"'+(_csvMap[f]===h?' selected':'')+'>'+esc(h)+'</option>';}).join('');return '<div><label class="fl text-xs">'+f.toUpperCase()+'</label><select class="fi text-xs" style="padding:6px 10px" onchange="_csvMap[\''+f+'\']=this.value">'+opts+'</select></div>';}).join('');
   var preview=_csvRows.slice(0,5);
-  document.getElementById('csv-prev-tbl').innerHTML=
-    '<table style="width:100%;border-collapse:collapse;font-size:.72rem">'+
-    '<thead><tr>'+_csvFields.map(function(h){
-      return '<th style="background:rgba(10,8,7,.95);color:#57534e;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(245,158,11,.15);white-space:nowrap;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.8px;text-transform:uppercase">'+esc(h)+'</th>';
-    }).join('')+'</tr></thead><tbody>'+
-    preview.map(function(row){
-      return '<tr style="border-bottom:1px solid rgba(245,158,11,.05)">'+
-        _csvFields.map(function(h){
-          return '<td style="padding:5px 10px;color:#a8a29e;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(String(row[h]||''))+'</td>';
-        }).join('')+'</tr>';
-    }).join('')+'</tbody></table>';
+  document.getElementById('csv-prev-tbl').innerHTML='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr>'+_csvFields.map(function(h){return '<th style="background:rgba(10,8,7,.95);color:#57534e;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(245,158,11,.15);white-space:nowrap;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.8px;text-transform:uppercase">'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+preview.map(function(row){return '<tr style="border-bottom:1px solid rgba(245,158,11,.05)">'+_csvFields.map(function(h){return '<td style="padding:5px 10px;color:#a8a29e;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(String(row[h]||''))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
   document.getElementById('csv-stats').textContent=_csvRows.length+' rows detected.';
   ['csv-map-wrap','csv-prev-wrap','csv-stats'].forEach(function(id){document.getElementById(id).classList.remove('hidden');});
   document.getElementById('csv-go').classList.remove('hidden');
 }
 async function doImport(){
-  var rawRecords=_csvRows.map(function(row){
-    var m=_csvMap;
-    function cell(f){return m[f]?String(row[m[f]]||'').trim():'';}
-    return{
-      name:cell('name'),origin:cell('origin')||'TEA',rank:cell('rank')||'R3',
-      power:parseFloat(cell('power').replace(/[^0-9.]/g,''))||0,
-      tc:parseInt(cell('tc').replace(/[^0-9]/g,''),10)||0,
-      placement:cell('placement')||'MAIN ALLIANCE',
-      flag:cell('flag'),tags:cell('tags'),notes:cell('notes'),
-    };
-  });
+  var rawRecords=_csvRows.map(function(row){var m=_csvMap;function cell(f){return m[f]?String(row[m[f]]||'').trim():'';}return{name:cell('name'),origin:cell('origin')||'TEA',rank:cell('rank')||'R3',power:parseFloat(cell('power').replace(/[^0-9.]/g,''))||0,tc:parseInt(cell('tc').replace(/[^0-9]/g,''),10)||0,placement:cell('placement')||'MAIN ALLIANCE',flag:cell('flag'),tags:cell('tags'),notes:cell('notes')};});
   var records=rawRecords.map(sanitisePayload).filter(function(r){return r.name&&r.name.length>0;});
   if(!records.length){toast('No valid rows. Map the "name" column.','warn');return;}
-  var btn=document.getElementById('csv-go');
-  btn.disabled=true;btn.textContent='Deploying '+records.length+' soldiers\u2026';
-  try{
-    var {error}=await sb.from('players').upsert(records,{onConflict:'name'});
-    if(error) throw new Error(fmtDbError(error));
-    toast(records.length+' soldiers deployed!','success');
-    closeModal('m-csv');resetCSV();
-    await fetchPlayers();renderAll();
-  } catch(err){
-    toast('Import failed: '+(err.message||String(err)),'error');
-    console.error('[doImport]',err);
-  } finally{
-    btn.disabled=false;
-    btn.innerHTML='<i class="fa-solid fa-file-import text-xs"></i> Deploy to Supabase';
-  }
+  var btn=document.getElementById('csv-go');btn.disabled=true;btn.textContent='Deploying '+records.length+' soldiers\u2026';
+  try{var {error}=await sb.from('players').upsert(records,{onConflict:'name'});if(error)throw new Error(fmtDbError(error));toast(records.length+' soldiers deployed!','success');closeModal('m-csv');resetCSV();await fetchPlayers();renderAll();}
+  catch(err){toast('Import failed: '+(err.message||String(err)),'error');console.error('[doImport]',err);}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-file-import text-xs"></i> Deploy to Supabase';}
 }
-function resetCSV(){
-  _csvRows=[];_csvFields=[];_csvMap={};
-  document.getElementById('csv-file').value='';
-  ['csv-map-wrap','csv-prev-wrap','csv-stats'].forEach(function(id){document.getElementById(id).classList.add('hidden');});
-  document.getElementById('csv-go').classList.add('hidden');
-}
+function resetCSV(){_csvRows=[];_csvFields=[];_csvMap={};document.getElementById('csv-file').value='';['csv-map-wrap','csv-prev-wrap','csv-stats'].forEach(function(id){document.getElementById(id).classList.add('hidden');});document.getElementById('csv-go').classList.add('hidden');}
 
 /* ════════════════════════════════════════════════════════════════
-   KPI CARDS — War Room Intel (Northern Lords palette)
+   KPI CARDS — Three-Faction Color System
+   MAIN ALLIANCE = TEA amber/gold  |  ACADEMY = bronze/copper  |  ONX = frost cyan
 ════════════════════════════════════════════════════════════════ */
 function renderKPI(){
   var ps=S.players;
@@ -1097,62 +792,35 @@ function renderKPI(){
   var tea =ps.filter(function(p){return p.origin==='TEA';});
   var onx =ps.filter(function(p){return p.origin==='ONX';});
   var total=ps.reduce(function(s,p){return s+(p.power||0);},0);
-  var mTot =main.reduce(function(s,p){return s+(p.power||0);},0);
-  var aTot =acad.reduce(function(s,p){return s+(p.power||0);},0);
+  var mTot=main.reduce(function(s,p){return s+(p.power||0);},0);
+  var aTot=acad.reduce(function(s,p){return s+(p.power||0);},0);
   var mAvg=main.length?mTot/main.length:0;
   var aAvg=acad.length?aTot/acad.length:0;
 
   var kpis=[
-    {l:'PERSONNEL', v:ps.length,
-     sub:tea.length+' TEA &bull; '+onx.length+' ONX',
-     icon:'fa-users',
-     ic:'#fb923c',ib:'rgba(249,115,22,.15)',
-     bar:'linear-gradient(90deg,#f97316,#fb923c)',
-     vc:'#fef3c7',glow:'0 0 30px rgba(249,115,22,.07)'},
-    {l:'MAIN ALLIANCE', v:main.length,
-     sub:'Avg '+fmtPow(mAvg)+' &bull; '+fmtPow(mTot),
-     icon:'fa-shield-halved',
-     ic:'#fbbf24',ib:'rgba(251,191,36,.15)',
-     bar:'linear-gradient(90deg,#fbbf24,#f59e0b)',
-     vc:'#fef3c7',glow:'0 0 30px rgba(251,191,36,.07)'},
-    {l:'ACADEMY', v:acad.length,
-     sub:'Avg '+fmtPow(aAvg)+' &bull; '+fmtPow(aTot),
-     icon:'fa-graduation-cap',
-     ic:'#f97316',ib:'rgba(249,115,22,.12)',
-     bar:'linear-gradient(90deg,#f97316,#fbbf24)',
-     vc:'#fef3c7',glow:'0 0 30px rgba(249,115,22,.05)'},
-    {l:'TEA FORCES', v:tea.length,
-     sub:tea.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length+' main &bull; '+
-         tea.filter(function(p){return p.placement==='ACADEMY';}).length+' acad',
-     icon:'fa-chess-rook',
-     ic:'#fb923c',ib:'rgba(249,115,22,.12)',
-     bar:'linear-gradient(90deg,#f97316,#ea580c)',
-     vc:'#fef3c7',glow:'0 0 30px rgba(249,115,22,.05)'},
-    {l:'ONX FORCES', v:onx.length,
-     sub:onx.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length+' main &bull; '+
-         onx.filter(function(p){return p.placement==='ACADEMY';}).length+' acad',
-     icon:'fa-dragon',
-     ic:'#f97316',ib:'rgba(234,88,12,.15)',
-     bar:'linear-gradient(90deg,#ea580c,#f97316)',
-     vc:'#fef3c7',glow:'0 0 30px rgba(234,88,12,.07)'},
-    {l:'TOTAL POWER', v:fmtPow(total),
-     sub:'Combined roster',
-     icon:'fa-bolt',
-     ic:'#fbbf24',ib:'rgba(245,158,11,.15)',
-     bar:'linear-gradient(90deg,#f59e0b,#fbbf24)',
-     vc:'#fef3c7',glow:'0 0 30px rgba(245,158,11,.07)'},
+    {l:'PERSONNEL',v:ps.length,sub:tea.length+' TEA &bull; '+onx.length+' ONX',icon:'fa-users',
+     cls:'',ic:'#fb923c',ib:'rgba(249,115,22,.14)',bar:'linear-gradient(90deg,#fbbf24 40%,#38bdf8 100%)',vc:'#fef3c7',glow:'0 0 24px rgba(249,115,22,.05)'},
+    {l:'MAIN ALLIANCE',v:main.length,sub:'Avg '+fmtPow(mAvg)+' &bull; '+fmtPow(mTot),icon:'fa-shield-halved',
+     cls:'card-tea',ic:'#fbbf24',ib:'rgba(245,158,11,.15)',bar:'linear-gradient(90deg,#d97706,#fbbf24)',vc:'#fbbf24',glow:'0 0 24px rgba(245,158,11,.07)'},
+    {l:'ACADEMY',v:acad.length,sub:'Avg '+fmtPow(aAvg)+' &bull; '+fmtPow(aTot),icon:'fa-graduation-cap',
+     cls:'card-acad',ic:'#d97706',ib:'rgba(217,119,6,.14)',bar:'linear-gradient(90deg,#92400e,#d97706)',vc:'#d97706',glow:'0 0 24px rgba(217,119,6,.07)'},
+    {l:'TEA FORCES',v:tea.length,sub:tea.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length+' main &bull; '+tea.filter(function(p){return p.placement==='ACADEMY';}).length+' acad',icon:'fa-chess-rook',
+     cls:'card-tea',ic:'#fbbf24',ib:'rgba(245,158,11,.15)',bar:'linear-gradient(90deg,#b45309,#fbbf24)',vc:'#fbbf24',glow:'0 0 24px rgba(245,158,11,.06)'},
+    {l:'ONX FORCES',v:onx.length,sub:onx.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length+' main &bull; '+onx.filter(function(p){return p.placement==='ACADEMY';}).length+' acad',icon:'fa-dragon',
+     cls:'card-onx',ic:'#38bdf8',ib:'rgba(56,189,248,.14)',bar:'linear-gradient(90deg,#0284c7,#38bdf8)',vc:'#38bdf8',glow:'0 0 24px rgba(56,189,248,.08)'},
+    {l:'TOTAL POWER',v:fmtPow(total),sub:'Combined battle power',icon:'fa-bolt',
+     cls:'',ic:'#fbbf24',ib:'rgba(245,158,11,.14)',bar:'linear-gradient(90deg,#f59e0b,#fbbf24)',vc:'#fef3c7',glow:'0 0 24px rgba(245,158,11,.06)'},
   ];
 
   document.getElementById('kpi').innerHTML=kpis.map(function(k){
-    return '<div class="card p-3 sm:p-4" style="box-shadow:0 6px 24px rgba(0,0,0,.65),inset 0 1px 0 rgba(251,191,36,.07),'+k.glow+'">' +
-      '<div class="kbar mb-3" style="background:'+k.bar+'"></div>' +
-      '<div class="flex items-start gap-3">' +
-        '<div class="flex-shrink-0 w-9 h-9 rounded flex items-center justify-center text-sm border" style="background:'+k.ib+';color:'+k.ic+';border-color:rgba(245,158,11,.2)">'+
-          '<i class="fa-solid '+k.icon+'"></i>' +
-        '</div>' +
-        '<div class="min-w-0">' +
+    return '<div class="card '+(k.cls||'')+' p-3 sm:p-4" style="box-shadow:0 6px 24px rgba(0,0,0,.7),inset 0 1px 0 rgba(251,191,36,.05),'+k.glow+'">'+
+      '<div class="kbar mb-3" style="background:'+k.bar+'"></div>'+
+      '<div class="flex items-start gap-3">'+
+        '<div class="flex-shrink-0 w-9 h-9 rounded flex items-center justify-center text-sm" style="background:'+k.ib+';color:'+k.ic+';border:1px solid rgba(245,158,11,.16)">'+
+          '<i class="fa-solid '+k.icon+'"></i></div>'+
+        '<div class="min-w-0">'+
           '<div class="font-black text-2xl sm:text-3xl leading-none mb-0.5" style="font-family:Rajdhani,sans-serif;color:'+k.vc+'">'+k.v+'</div>'+
-          '<p class="sec-lbl leading-tight" style="font-size:.62rem">'+k.l+'</p>'+
+          '<p class="sec-lbl leading-tight" style="font-size:.6rem">'+k.l+'</p>'+
           '<p class="text-xs leading-tight mt-0.5 truncate" style="color:#44403c">'+k.sub+'</p>'+
         '</div>'+
       '</div>'+
@@ -1161,7 +829,8 @@ function renderKPI(){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   OVERVIEW — bright forge fills for charts
+   OVERVIEW — Three distinct chart colors
+   Main Alliance = amber  |  Academy = bronze  |  TEA = gold  |  ONX = frost cyan
 ════════════════════════════════════════════════════════════════ */
 function renderOverview(){
   var ps=S.players;
@@ -1171,18 +840,18 @@ function renderOverview(){
   var onx =ps.filter(function(p){return p.origin==='ONX';});
   var CAP=120;
 
-  /* Bar chart — bright amber-to-copper gradient fills */
+  /* Bar chart: 4 distinct colors */
   var bars=[
-    {l:'Main',v:main.length,c:'linear-gradient(180deg,#fbbf24 0%,#f97316 100%)'},
-    {l:'Academy',v:acad.length,c:'linear-gradient(180deg,#f97316 0%,#ea580c 100%)'},
-    {l:'TEA',v:tea.length,c:'linear-gradient(180deg,#fb923c 0%,#f97316 100%)'},
-    {l:'ONX',v:onx.length,c:'linear-gradient(180deg,#f59e0b 0%,#d97706 100%)'},
+    {l:'Main',   v:main.length,c:'linear-gradient(180deg,#fbbf24 0%,#f59e0b 100%)',glow:'rgba(245,158,11,.3)'},
+    {l:'Academy',v:acad.length,c:'linear-gradient(180deg,#e8a000 0%,#b45309 100%)',glow:'rgba(217,119,6,.3)'},
+    {l:'TEA',    v:tea.length, c:'linear-gradient(180deg,#fde68a 0%,#f59e0b 100%)',glow:'rgba(245,158,11,.25)'},
+    {l:'ONX',    v:onx.length, c:'linear-gradient(180deg,#7dd3fc 0%,#0ea5e9 100%)',glow:'rgba(56,189,248,.28)'},
   ];
   document.getElementById('ov-bars').innerHTML=bars.map(function(b){
     var h=Math.max(Math.round(b.v/CAP*96),4);
     return '<div class="flex flex-col items-center gap-1 flex-1">'+
       '<span style="color:#a8a29e;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem">'+b.v+'</span>'+
-      '<div class="w-full rounded-t" style="height:'+h+'px;background:'+b.c+';box-shadow:0 0 10px rgba(245,158,11,.25)"></div></div>';
+      '<div class="w-full rounded-t" style="height:'+h+'px;background:'+b.c+';box-shadow:0 0 10px '+b.glow+'"></div></div>';
   }).join('');
   document.getElementById('ov-legend').innerHTML=bars.map(function(b){
     return '<div class="flex items-center gap-2">'+
@@ -1190,115 +859,94 @@ function renderOverview(){
       '<span class="sec-lbl" style="font-size:.68rem;letter-spacing:.5px">'+b.l+': <span style="color:#a8a29e">'+b.v+'</span></span></div>';
   }).join('');
 
-  /* Placement bars — bright ember-to-gold gradient fills */
+  /* Placement bars: TEA amber vs Academy bronze */
   document.getElementById('ov-placement').innerHTML=[
-    {l:'Main Alliance',cnt:main.length,tot:main.reduce(function(s,p){return s+(p.power||0);},0),
-     bg:'linear-gradient(90deg,#f97316,#fbbf24)',tc:'#fbbf24'},
-    {l:'Academy',cnt:acad.length,tot:acad.reduce(function(s,p){return s+(p.power||0);},0),
-     bg:'linear-gradient(90deg,#ea580c,#f97316)',tc:'#fb923c'},
+    {l:'Main Alliance',cnt:main.length,tot:mTot(),bg:'linear-gradient(90deg,#d97706,#fbbf24)',tc:'#fbbf24',icon:'fa-shield-halved'},
+    {l:'Academy',      cnt:acad.length,tot:aTot(),bg:'linear-gradient(90deg,#92400e,#d97706)',tc:'#d97706',icon:'fa-graduation-cap'},
   ].map(function(g){
     var pct=ps.length?Math.round(g.cnt/ps.length*100):0;
     return '<div>'+
       '<div class="flex justify-between mb-1" style="font-size:.72rem">'+
-        '<span class="sec-lbl" style="letter-spacing:.5px">'+g.l+'</span>'+
+        '<span class="sec-lbl" style="letter-spacing:.5px"><i class="fa-solid '+g.icon+' mr-1" style="font-size:.6rem"></i>'+g.l+'</span>'+
         '<span style="color:'+g.tc+';font-family:Rajdhani,sans-serif;font-weight:800">'+g.cnt+' &bull; '+fmtPow(g.tot)+' ('+pct+'%)</span>'+
       '</div>'+
-      '<div class="pb"><div class="pf" style="width:'+pct+'%;background:'+g.bg+'"></div></div></div>';
+      '<div class="pb"><div class="pf" style="width:'+pct+'%;background:'+g.bg+';box-shadow:0 0 8px rgba(245,158,11,.18)"></div></div></div>';
   }).join('')+
-  '<div class="pt-2 text-xs sec-lbl" style="border-top:1px solid rgba(245,158,11,.08);margin-top:6px">TOTAL: <span style="color:#a8a29e">'+ps.length+' soldiers</span></div>';
+  '<div class="pt-2 text-xs sec-lbl" style="border-top:1px solid rgba(245,158,11,.07);margin-top:6px">TOTAL: <span style="color:#a8a29e">'+ps.length+' soldiers</span></div>';
 
-  /* Origin breakdown */
+  function mTot(){return main.reduce(function(s,p){return s+(p.power||0);},0);}
+  function aTot(){return acad.reduce(function(s,p){return s+(p.power||0);},0);}
+
+  /* Origin: TEA = amber, ONX = frost cyan */
   document.getElementById('ov-origin').innerHTML=[
     {l:'TEA',cnt:tea.length,pow:tea.reduce(function(s,p){return s+(p.power||0);},0),
      main:tea.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length,
      acad:tea.filter(function(p){return p.placement==='ACADEMY';}).length,
-     tc:'#fb923c',dot:'rgba(249,115,22,.8)'},
+     tc:'#fbbf24',dot:'rgba(251,191,36,.9)',desc:'Amber Forge'},
     {l:'ONX',cnt:onx.length,pow:onx.reduce(function(s,p){return s+(p.power||0);},0),
      main:onx.filter(function(p){return p.placement==='MAIN ALLIANCE';}).length,
      acad:onx.filter(function(p){return p.placement==='ACADEMY';}).length,
-     tc:'#f59e0b',dot:'rgba(234,88,12,.8)'},
+     tc:'#38bdf8',dot:'rgba(56,189,248,.9)',desc:'Frost Legion'},
   ].map(function(o){
-    return '<div class="flex items-center justify-between py-1" style="border-bottom:1px solid rgba(245,158,11,.06)">'+
-      '<div class="flex items-center gap-2"><div class="dot" style="background:'+o.dot+'"></div>'+
-        '<span style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.88rem;color:#e7e5e4;letter-spacing:1px">'+o.l+'</span></div>'+
+    return '<div class="flex items-center justify-between py-2 px-2 rounded" style="border:1px solid rgba(245,158,11,.07);background:rgba(255,255,255,.015)">'+
+      '<div class="flex items-center gap-2">'+
+        '<div class="dot" style="background:'+o.dot+';box-shadow:0 0 8px '+o.dot+'"></div>'+
+        '<div><span style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;color:'+o.tc+';letter-spacing:3px">'+o.l+'</span>'+
+          '<span class="sec-lbl ml-2" style="font-size:.6rem;color:#44403c">'+o.desc+'</span></div>'+
+      '</div>'+
       '<div class="text-right">'+
         '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.9rem;color:'+o.tc+'">'+o.cnt+' &bull; '+fmtPow(o.pow)+'</div>'+
-        '<div class="sec-lbl" style="font-size:.62rem;letter-spacing:.4px">'+o.main+' MAIN &bull; '+o.acad+' ACAD</div>'+
+        '<div class="sec-lbl" style="font-size:.62rem">'+o.main+' MAIN &bull; '+o.acad+' ACAD</div>'+
       '</div></div>';
   }).join('');
 
-  /* Power tiers — vivid bordered tiles */
+  /* Power tiers — distinct 4-tier coloring */
   var tiers=[
-    {l:'1B+',    min:1000,max:1e9,  c:'#fb923c',b:'rgba(249,115,22,.45)',bg:'rgba(249,115,22,.08)'},
-    {l:'100M+',  min:100, max:1000, c:'#fbbf24',b:'rgba(251,191,36,.45)',bg:'rgba(251,191,36,.07)'},
-    {l:'50–99M', min:50,  max:100,  c:'#f59e0b',b:'rgba(245,158,11,.4)', bg:'rgba(245,158,11,.06)'},
-    {l:'< 50M',  min:0,   max:50,   c:'#f87171',b:'rgba(220,38,38,.4)',  bg:'rgba(220,38,38,.06)'},
+    {l:'1B+',   min:1000,max:1e9, c:'#38bdf8',b:'rgba(56,189,248,.45)', bg:'rgba(56,189,248,.07)'},
+    {l:'100M+', min:100, max:1000,c:'#fbbf24',b:'rgba(251,191,36,.45)', bg:'rgba(251,191,36,.07)'},
+    {l:'50–99M',min:50,  max:100, c:'#d97706',b:'rgba(217,119,6,.42)',  bg:'rgba(217,119,6,.06)'},
+    {l:'< 50M', min:0,   max:50,  c:'#f87171',b:'rgba(220,38,38,.4)',   bg:'rgba(220,38,38,.06)'},
   ];
   document.getElementById('ov-tiers').innerHTML=tiers.map(function(t){
     var cnt=ps.filter(function(p){return p.power>=t.min&&p.power<t.max;}).length;
-    return '<div class="rounded-md p-3" style="border:1px solid '+t.b+';background:'+t.bg+'">'+
+    return '<div class="rounded p-3" style="border:1px solid '+t.b+';background:'+t.bg+'">'+
       '<div class="font-black text-3xl" style="font-family:Rajdhani,sans-serif;color:'+t.c+'">'+cnt+'</div>'+
-      '<div class="sec-lbl mt-1" style="font-size:.65rem;letter-spacing:.5px">'+t.l+'</div></div>';
+      '<div class="sec-lbl mt-1" style="font-size:.65rem">'+t.l+'</div></div>';
   }).join('');
 
   /* Intel summary */
-  var actions=[
-    '<strong style="color:#fbbf24">'+main.length+'</strong> in Main Alliance &bull; <strong style="color:#fb923c">'+acad.length+'</strong> in Academy',
-    '<strong style="color:#f59e0b">'+fmtPow(ps.reduce(function(s,p){return s+(p.power||0);},0))+'</strong> combined battle power',
-    '<strong style="color:#fbbf24">'+ps.filter(function(p){return p.flag==='EVALUATE';}).length+'</strong> soldiers flagged for evaluation',
-    '<strong style="color:#f87171">'+ps.filter(function(p){return p.flag==='INACTIVE';}).length+'</strong> soldiers marked inactive',
-    '<strong style="color:#fb923c">'+ps.filter(function(p){return p.flag==='PENDING MOVE';}).length+'</strong> with pending transfer orders',
+  var acts=[
+    '<i class="fa-solid fa-shield-halved mr-1" style="color:#fbbf24;font-size:.75rem"></i><strong style="color:#fbbf24">'+main.length+'</strong> Main Alliance &bull; <strong style="color:#d97706">'+acad.length+'</strong> Academy',
+    '<i class="fa-solid fa-bolt mr-1" style="color:#f59e0b;font-size:.75rem"></i><strong style="color:#f59e0b">'+fmtPow(ps.reduce(function(s,p){return s+(p.power||0);},0))+'</strong> combined battle power',
+    '<i class="fa-solid fa-flag mr-1" style="color:#fde68a;font-size:.75rem"></i><strong style="color:#fde68a">'+ps.filter(function(p){return p.flag==='EVALUATE';}).length+'</strong> flagged for evaluation',
+    '<i class="fa-solid fa-skull-crossbones mr-1" style="color:#f87171;font-size:.75rem"></i><strong style="color:#f87171">'+ps.filter(function(p){return p.flag==='INACTIVE';}).length+'</strong> inactive soldiers',
+    '<i class="fa-solid fa-arrows-rotate mr-1" style="color:#d97706;font-size:.75rem"></i><strong style="color:#d97706">'+ps.filter(function(p){return p.flag==='PENDING MOVE';}).length+'</strong> with pending transfer orders',
   ];
-  document.getElementById('ov-actions').innerHTML=actions.map(function(a){
-    return '<li style="border-left:2px solid rgba(245,158,11,.3);padding-left:10px;padding-top:2px;padding-bottom:2px;color:#78716c;font-size:.82rem">'+a+'</li>';
-  }).join('');
+  document.getElementById('ov-actions').innerHTML=acts.map(function(a){return '<li style="border-left:2px solid rgba(245,158,11,.22);padding-left:10px;padding-top:2px;padding-bottom:2px;color:#78716c;font-size:.82rem">'+a+'</li>';}).join('');
 }
 
-/* ════════════════════════════════════════════════════════════════
-   BADGES — Northern Lords forged-iron style
-════════════════════════════════════════════════════════════════ */
-function originBadge(o){
-  return o==='TEA'
-    ?'<span class="badge b-cyan" style="letter-spacing:2px">TEA</span>'
-    :'<span class="badge b-purple" style="letter-spacing:2px">ONX</span>';
-}
-function placeBadge(pl){
-  return pl==='MAIN ALLIANCE'
-    ?'<span class="badge b-green" style="letter-spacing:.8px"><i class="fa-solid fa-shield-halved" style="font-size:.55rem;margin-right:3px"></i>Main</span>'
-    :'<span class="badge b-blue" style="letter-spacing:.8px"><i class="fa-solid fa-graduation-cap" style="font-size:.55rem;margin-right:3px"></i>Acad</span>';
-}
+/* BADGES */
+function originBadge(o){return o==='TEA'?'<span class="badge b-tea" style="letter-spacing:2px"><i class="fa-solid fa-chess-rook" style="font-size:.5rem;margin-right:3px"></i>TEA</span>':'<span class="badge b-onx" style="letter-spacing:2px"><i class="fa-solid fa-dragon" style="font-size:.5rem;margin-right:3px"></i>ONX</span>';}
+function placeBadge(pl){return pl==='MAIN ALLIANCE'?'<span class="badge b-main" style="letter-spacing:.8px"><i class="fa-solid fa-shield-halved" style="font-size:.5rem;margin-right:3px"></i>Main</span>':'<span class="badge b-acad" style="letter-spacing:.8px"><i class="fa-solid fa-graduation-cap" style="font-size:.5rem;margin-right:3px"></i>Acad</span>';}
 function rankBadge(r){
-  var styles={
-    R5:'background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.45);box-shadow:0 0 8px rgba(245,158,11,.2)',
-    R4:'background:rgba(249,115,22,.15);color:#fb923c;border:1px solid rgba(249,115,22,.4)',
-    R3:'background:rgba(245,158,11,.1); color:#f59e0b;border:1px solid rgba(245,158,11,.3)',
-    R2:'background:rgba(87,83,78,.1);   color:#a8a29e;border:1px solid rgba(87,83,78,.28)',
-    R1:'background:rgba(68,64,60,.08);  color:#78716c;border:1px solid rgba(68,64,60,.22)',
-  };
-  return '<span class="badge" style="'+(styles[r]||styles.R1)+'">'+esc(r||'?')+'</span>';
+  var st={R5:'background:rgba(251,191,36,.16);color:#fbbf24;border:1px solid rgba(251,191,36,.5);box-shadow:0 0 8px rgba(245,158,11,.2)',R4:'background:rgba(245,158,11,.12);color:#fde68a;border:1px solid rgba(245,158,11,.38)',R3:'background:rgba(249,115,22,.1);color:#fb923c;border:1px solid rgba(249,115,22,.3)',R2:'background:rgba(87,83,78,.1);color:#a8a29e;border:1px solid rgba(87,83,78,.26)',R1:'background:rgba(68,64,60,.08);color:#78716c;border:1px solid rgba(68,64,60,.2)'};
+  return '<span class="badge" style="'+(st[r]||st.R1)+'">'+esc(r||'?')+'</span>';
 }
 function flagBadge(f){
-  if(!f) return '';
-  var m={
-    'ACTIVE MEMBER':'b-green','EXCEPTION':'b-purple','EVALUATE':'b-amber',
-    'DEVELOP':'b-blue','NEW PLAYER':'b-cyan','PENDING MOVE':'b-amber',
-    'RALLY LEADER':'b-pink','INACTIVE':'b-red','HEALTH / LEAVE':'b-gray',
-    'CAMEBACK NOW':'b-gray','SMURF / FARM':'b-gray'
-  };
+  if(!f)return '';
+  var m={'ACTIVE MEMBER':'b-main','EXCEPTION':'b-onx','EVALUATE':'b-amber','DEVELOP':'b-blue','NEW PLAYER':'b-tea','PENDING MOVE':'b-amber','RALLY LEADER':'b-pink','INACTIVE':'b-red','HEALTH / LEAVE':'b-gray','CAMEBACK NOW':'b-gray','SMURF / FARM':'b-gray'};
   return '<span class="badge '+(m[f]||'b-gray')+'" style="letter-spacing:.5px">'+esc(f)+'</span>';
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-/* ════════════════════════════════════════════════════════════════
-   TABLE RENDERING (desktop)
-════════════════════════════════════════════════════════════════ */
+/* TABLE RENDERING */
 function tabPlayers(tab){
   var f=S.filters[tab];var ss=S.sort[tab];
   var arr=S.players.filter(function(p){
-    if(tab==='main'&&p.placement!=='MAIN ALLIANCE') return false;
-    if(tab==='acad'&&p.placement!=='ACADEMY')       return false;
-    if(tab==='all'&&f.placement&&p.placement!==f.placement) return false;
-    if(f.origin&&p.origin!==f.origin) return false;
+    if(tab==='main'&&p.placement!=='MAIN ALLIANCE')return false;
+    if(tab==='acad'&&p.placement!=='ACADEMY')return false;
+    if(tab==='all'&&f.placement&&p.placement!==f.placement)return false;
+    if(f.origin&&p.origin!==f.origin)return false;
     if(f.q){var q=f.q.toLowerCase();return(p.name||'').toLowerCase().includes(q)||(p.flag||'').toLowerCase().includes(q)||(p.tags||'').toLowerCase().includes(q)||(p.rank||'').toLowerCase().includes(q);}
     return true;
   });
@@ -1307,209 +955,124 @@ function tabPlayers(tab){
 }
 
 function renderTableDesktop(tab,players){
-  var baseCols=[
-    {key:'_num',  label:'#',      sort:false},
-    {key:'name',  label:'Callsign'},
-    {key:'origin',label:'Origin'},
-    {key:'power', label:'Power'},
-    {key:'tc',    label:'TC'},
-    {key:'rank',  label:'Rank'},
-    {key:'flag',  label:'Status'},
-    {key:'tags',  label:'Tags',   sort:false},
-  ];
-  if(tab==='all') baseCols.splice(3,0,{key:'placement',label:'Assignment'});
-  if(S.isAdmin)   baseCols.push({key:'_admin',label:'Actions',sort:false});
-
+  var baseCols=[{key:'_num',label:'#',sort:false},{key:'name',label:'Callsign'},{key:'origin',label:'Origin'},{key:'power',label:'Power'},{key:'tc',label:'TC'},{key:'rank',label:'Rank'},{key:'flag',label:'Status'},{key:'tags',label:'Tags',sort:false}];
+  if(tab==='all')baseCols.splice(3,0,{key:'placement',label:'Assignment'});
+  if(S.isAdmin)baseCols.push({key:'_admin',label:'Actions',sort:false});
   var ss=S.sort[tab];
-  document.getElementById('th-'+tab).innerHTML='<tr>'+baseCols.map(function(c){
-    if(c.sort===false) return '<th>'+c.label+'</th>';
-    var active=ss.col===c.key;
-    var cls=active?(ss.dir>0?'asc':'desc'):'';
-    var arrow=active?(ss.dir>0?'&#9650;':'&#9660;'):'&#8597;';
-    return '<th class="'+cls+'" onclick="onSort(\''+tab+'\',\''+c.key+'\')">'+c.label+' <span class="si">'+arrow+'</span></th>';
-  }).join('')+'</tr>';
-
-  if(!players.length){
-    document.getElementById('tb-'+tab).innerHTML='<tr><td colspan="'+baseCols.length+'" style="text-align:center;padding:40px;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</td></tr>';
-    return;
-  }
-
+  document.getElementById('th-'+tab).innerHTML='<tr>'+baseCols.map(function(c){if(c.sort===false)return '<th>'+c.label+'</th>';var active=ss.col===c.key;var cls=active?(ss.dir>0?'asc':'desc'):'';var arrow=active?(ss.dir>0?'&#9650;':'&#9660;'):'&#8597;';return '<th class="'+cls+'" onclick="onSort(\''+tab+'\',\''+c.key+'\')">'+c.label+' <span class="si">'+arrow+'</span></th>';}).join('')+'</tr>';
+  if(!players.length){document.getElementById('tb-'+tab).innerHTML='<tr><td colspan="'+baseCols.length+'" style="text-align:center;padding:40px;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</td></tr>';return;}
   document.getElementById('tb-'+tab).innerHTML=players.map(function(p,i){
-    var tagPills=(p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean)
-      .map(function(t){return '<span class="tpill b-blue" style="font-family:Rajdhani,sans-serif">'+esc(t)+'</span>';}).join('');
+    var tagPills=(p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean).map(function(t){return '<span class="tpill b-blue" style="font-family:Rajdhani,sans-serif">'+esc(t)+'</span>';}).join('');
     var placeCell=tab==='all'?'<td>'+placeBadge(p.placement)+'</td>':'';
     var adminCell='';
-    if(S.isAdmin){
-      adminCell='<td style="white-space:nowrap">'+
-        '<select class="psel" onchange="quickPlace(\''+p.id+'\',this.value)">'+
-          '<option value="MAIN ALLIANCE"'+(p.placement==='MAIN ALLIANCE'?' selected':'')+'>Main</option>'+
-          '<option value="ACADEMY"'+(p.placement==='ACADEMY'?' selected':'')+'>Acad</option>'+
-        '</select> '+
-        '<button class="btn btn-cyan" style="padding:2px 8px;font-size:.65rem;min-height:28px" onclick="onEdit(\''+p.id+'\')"><i class="fa-solid fa-pen text-xs"></i></button> '+
-        '<button class="btn btn-red"  style="padding:2px 8px;font-size:.65rem;min-height:28px" onclick="onDel(\''+p.id+'\')"><i class="fa-solid fa-trash text-xs"></i></button>'+
-        '</td>';
-    }
+    if(S.isAdmin){adminCell='<td style="white-space:nowrap"><select class="psel" onchange="quickPlace(\''+p.id+'\',this.value)"><option value="MAIN ALLIANCE"'+(p.placement==='MAIN ALLIANCE'?' selected':'')+'>Main</option><option value="ACADEMY"'+(p.placement==='ACADEMY'?' selected':'')+'>Acad</option></select> <button class="btn btn-tea" style="padding:2px 8px;font-size:.65rem;min-height:28px" onclick="onEdit(\''+p.id+'\')"><i class="fa-solid fa-pen text-xs"></i></button> <button class="btn btn-red" style="padding:2px 8px;font-size:.65rem;min-height:28px" onclick="onDel(\''+p.id+'\')"><i class="fa-solid fa-trash text-xs"></i></button></td>';}
     var pc=powClass(p.power);var tc=tcClass(p.tc);
     return '<tr>'+
       '<td style="color:#292524;font-size:.72rem;font-family:Rajdhani,sans-serif;font-weight:700">'+(i+1)+'</td>'+
       '<td style="font-weight:600;color:#fef3c7;font-size:.82rem">'+esc(p.name)+'</td>'+
-      '<td>'+originBadge(p.origin)+'</td>'+
-      placeCell+
+      '<td>'+originBadge(p.origin)+'</td>'+placeCell+
       '<td class="'+pc+'" style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:.9rem">'+fmtPow(p.power)+'</td>'+
       '<td class="'+tc+'" style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem">TC'+(p.tc||0)+'</td>'+
-      '<td>'+rankBadge(p.rank)+'</td>'+
-      '<td>'+flagBadge(p.flag)+'</td>'+
+      '<td>'+rankBadge(p.rank)+'</td>'+'<td>'+flagBadge(p.flag)+'</td>'+
       '<td style="max-width:160px">'+(tagPills||'<span style="color:#292524;font-size:.68rem">&mdash;</span>')+'</td>'+
       adminCell+'</tr>';
   }).join('');
 }
 
-/* ════════════════════════════════════════════════════════════════
-   MOBILE CARD RENDERING
-════════════════════════════════════════════════════════════════ */
+/* MOBILE CARDS */
 function renderCards(tab,players){
   var container=document.getElementById('cards-'+tab);
-  if(!players.length){
-    container.innerHTML='<p style="text-align:center;padding:40px 0;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</p>';
-    return;
-  }
+  if(!players.length){container.innerHTML='<p style="text-align:center;padding:40px 0;color:#292524;font-family:Rajdhani,sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">No soldiers match current filters</p>';return;}
   container.innerHTML=players.map(function(p){
     var tags=(p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
     var pc=powClass(p.power);var tc=tcClass(p.tc);
     var moveTarget=p.placement==='MAIN ALLIANCE'?'ACADEMY':'MAIN ALLIANCE';
-    var moveLabel=p.placement==='MAIN ALLIANCE'
-      ?'<i class="fa-solid fa-graduation-cap text-xs"></i> To Academy'
-      :'<i class="fa-solid fa-shield-halved text-xs"></i> To Main';
-    var adminHtml=S.isAdmin
-      ?'<div class="pcard-actions">'+
-          '<button class="btn btn-amber flex-1 text-xs" style="min-height:44px" onclick="quickPlace(\''+p.id+'\',\''+moveTarget+'\')">'+moveLabel+'</button>'+
-          '<button class="btn btn-cyan" style="min-width:44px;min-height:44px;padding:0;font-size:.9rem" onclick="onEdit(\''+p.id+'\')"><i class="fa-solid fa-pen"></i></button>'+
-          '<button class="btn btn-red"  style="min-width:44px;min-height:44px;padding:0;font-size:.9rem" onclick="onDel(\''+p.id+'\')"><i class="fa-solid fa-trash"></i></button>'+
-        '</div>'
-      :'';
-    return '<div class="pcard">'+
-      '<div class="flex items-start justify-between">'+
-        '<div class="flex-1 min-w-0 pl-3">'+
-          '<p class="pcard-name truncate">'+esc(p.name)+'</p>'+
-          '<div class="pcard-badges">'+originBadge(p.origin)+' '+rankBadge(p.rank)+(p.flag?' '+flagBadge(p.flag):'')+'</div>'+
-        '</div>'+
-        '<div class="ml-2 flex-shrink-0">'+(tab==='all'?placeBadge(p.placement):'')+'</div>'+
-      '</div>'+
-      '<div class="pcard-stats">'+
-        '<div class="pcard-stat"><div class="pcard-val '+pc+'">'+fmtPow(p.power)+'</div><div class="pcard-lbl">Power</div></div>'+
-        '<div class="pcard-stat"><div class="pcard-val '+tc+'">TC'+(p.tc||0)+'</div><div class="pcard-lbl">Town Center</div></div>'+
-        '<div class="pcard-stat"><div class="pcard-val" style="color:#a8a29e">'+esc(p.origin||'&mdash;')+'</div><div class="pcard-lbl">Origin</div></div>'+
-      '</div>'+
-      (tags.length?'<div class="flex flex-wrap gap-1 mt-2 pl-3">'+tags.map(function(t){return '<span class="tpill b-blue">'+esc(t)+'</span>';}).join('')+'</div>':'')+
-      adminHtml+'</div>';
+    var moveLabel=p.placement==='MAIN ALLIANCE'?'<i class="fa-solid fa-graduation-cap text-xs"></i> To Academy':'<i class="fa-solid fa-shield-halved text-xs"></i> To Main';
+    var adminHtml=S.isAdmin?'<div class="pcard-actions"><button class="btn btn-amber flex-1 text-xs" style="min-height:44px" onclick="quickPlace(\''+p.id+'\',\''+moveTarget+'\')">'+moveLabel+'</button><button class="btn btn-tea" style="min-width:44px;min-height:44px;padding:0;font-size:.9rem" onclick="onEdit(\''+p.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-red" style="min-width:44px;min-height:44px;padding:0;font-size:.9rem" onclick="onDel(\''+p.id+'\')"><i class="fa-solid fa-trash"></i></button></div>':'';
+    var originColor=p.origin==='TEA'?'#fbbf24':'#38bdf8';
+    return '<div class="pcard"><div class="flex items-start justify-between"><div class="flex-1 min-w-0 pl-3"><p class="pcard-name truncate">'+esc(p.name)+'</p><div class="pcard-badges">'+originBadge(p.origin)+' '+rankBadge(p.rank)+(p.flag?' '+flagBadge(p.flag):'')+'</div></div><div class="ml-2 flex-shrink-0">'+(tab==='all'?placeBadge(p.placement):'')+'</div></div><div class="pcard-stats"><div class="pcard-stat"><div class="pcard-val '+pc+'">'+fmtPow(p.power)+'</div><div class="pcard-lbl">Power</div></div><div class="pcard-stat"><div class="pcard-val '+tc+'">TC'+(p.tc||0)+'</div><div class="pcard-lbl">Town Center</div></div><div class="pcard-stat"><div class="pcard-val" style="color:'+originColor+'">'+esc(p.origin||'&mdash;')+'</div><div class="pcard-lbl">Origin</div></div></div>'+(tags.length?'<div class="flex flex-wrap gap-1 mt-2 pl-3">'+tags.map(function(t){return '<span class="tpill b-blue">'+esc(t)+'</span>';}).join('')+'</div>':'')+adminHtml+'</div>';
   }).join('');
 }
 
-function renderTable(tab){
-  var players=tabPlayers(tab);
-  var cntEl=document.getElementById('cnt-'+tab);
-  if(cntEl) cntEl.textContent='('+players.length+')';
-  renderTableDesktop(tab,players);renderCards(tab,players);
-}
+function renderTable(tab){var players=tabPlayers(tab);var cntEl=document.getElementById('cnt-'+tab);if(cntEl)cntEl.textContent='('+players.length+')';renderTableDesktop(tab,players);renderCards(tab,players);}
 function onSort(tab,col){var ss=S.sort[tab];if(ss.col===col)ss.dir*=-1;else{ss.col=col;ss.dir=-1;}renderTable(tab);}
 function onEdit(id){var p=S.players.find(function(x){return x.id===id;});if(p)openPlayerModal(p);}
 function onDel(id) {var p=S.players.find(function(x){return x.id===id;});if(p)openDeleteModal(p);}
 function renderAll(){renderKPI();renderOverview();renderTable('main');renderTable('acad');renderTable('all');}
 
-/* ── UI helpers ─────────────────────────────────────────────────── */
+/* UI helpers */
 function openModal(id) {document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function bgClick(e,id){if(e.target.id===id)closeModal(id);}
 
 var _toastTimer;
-function toast(msg,type){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.className='show '+(type||'success');
-  clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(function(){el.className='';},3500);
-}
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='show '+(type||'success');clearTimeout(_toastTimer);_toastTimer=setTimeout(function(){el.className='';},3500);}
 
 function setDbStatus(s){
   var dot=document.getElementById('db-dot'),txt=document.getElementById('db-txt');
-  if(s==='loading'){dot.style.background='#d97706';dot.style.boxShadow='0 0 6px rgba(217,119,6,.5)';txt.textContent='LINKING';}
-  else if(s==='ok'){dot.style.background='#f59e0b';dot.style.boxShadow='0 0 8px rgba(245,158,11,.6)';txt.textContent='ONLINE';}
-  else             {dot.style.background='#dc2626';dot.style.boxShadow='0 0 6px rgba(220,38,38,.5)'; txt.textContent='OFFLINE';}
+  if(s==='loading'){dot.className='dot';dot.style.background='#d97706';dot.style.boxShadow='0 0 5px rgba(217,119,6,.4)';txt.textContent='LINKING';}
+  else if(s==='ok'){dot.className='dot dot-pulse';dot.style.background='#fbbf24';dot.style.boxShadow='0 0 8px rgba(251,191,36,.6)';txt.textContent='ONLINE';}
+  else             {dot.className='dot';dot.style.background='#dc2626';dot.style.boxShadow='0 0 6px rgba(220,38,38,.5)'; txt.textContent='OFFLINE';}
 }
 
 function isoDate(){return new Date().toISOString().slice(0,10);}
-function dlBlob(content,name,mime){
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([content],{type:mime}));
-  a.download=name;a.click();
-}
+function dlBlob(content,name,mime){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=name;a.click();}
 
-/* ── Tab switching ──────────────────────────────────────────────── */
 function switchTab(tab){
   document.querySelectorAll('.tb').forEach(function(b){b.classList.toggle('active',b.dataset.tab===tab);});
   document.querySelectorAll('.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===tab);});
   document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('active');});
   document.getElementById('tab-'+tab).classList.add('active');
 }
-document.querySelectorAll('.tb').forEach(function(btn){
-  btn.addEventListener('click',function(){switchTab(btn.dataset.tab);});
-});
+document.querySelectorAll('.tb').forEach(function(btn){btn.addEventListener('click',function(){switchTab(btn.dataset.tab);});});
 
-/* ── Admin drawer ───────────────────────────────────────────────── */
 function openDrawer(){document.getElementById('admin-drawer').classList.add('open');document.getElementById('drawer-backdrop').classList.add('open');}
 function closeDrawer(){document.getElementById('admin-drawer').classList.remove('open');document.getElementById('drawer-backdrop').classList.remove('open');}
 
-/* ── Filter wiring ──────────────────────────────────────────────── */
 function wireAll(){
-  function wire(id,tab,field){
-    var el=document.getElementById(id);if(!el)return;
-    function up(){S.filters[tab][field]=el.value;renderTable(tab);}
-    el.addEventListener('input',up);el.addEventListener('change',up);
-  }
+  function wire(id,tab,field){var el=document.getElementById(id);if(!el)return;function up(){S.filters[tab][field]=el.value;renderTable(tab);}el.addEventListener('input',up);el.addEventListener('change',up);}
   wire('q-main','main','q');wire('f-origin-main','main','origin');
   wire('q-acad','acad','q');wire('f-origin-acad','acad','origin');
   wire('q-all','all','q');wire('f-place-all','all','placement');wire('f-origin-all','all','origin');
 }
 
-/* ── Keyboard ───────────────────────────────────────────────────── */
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){['m-login','m-player','m-del','m-csv'].forEach(closeModal);closeDrawer();}
   if(e.key==='Enter'&&document.getElementById('m-login').classList.contains('open'))doLogin();
 });
 
-/* ── Drag-drop ──────────────────────────────────────────────────── */
-(function(){
-  var dz=document.getElementById('csv-dz');if(!dz)return;
-  dz.addEventListener('dragover', function(e){e.preventDefault();dz.classList.add('over');});
-  dz.addEventListener('dragleave',function() {dz.classList.remove('over');});
-  dz.addEventListener('drop',     function(e){e.preventDefault();dz.classList.remove('over');var f=e.dataTransfer.files[0];if(f)onCSVFile(f);});
-})();
+(function(){var dz=document.getElementById('csv-dz');if(!dz)return;dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('over');});dz.addEventListener('dragleave',function(){dz.classList.remove('over');});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('over');var f=e.dataTransfer.files[0];if(f)onCSVFile(f);});})();
 
-/* ── Real-time ──────────────────────────────────────────────────── */
-function subscribeRT(){
-  sb.channel('roster-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'players'},async function(){
-      try{await fetchPlayers();renderAll();}catch(e){}
-    }).subscribe();
+function subscribeRT(){sb.channel('roster-rt').on('postgres_changes',{event:'*',schema:'public',table:'players'},async function(){try{await fetchPlayers();renderAll();}catch(e){}}).subscribe();}
+
+/* ── Optimistic init: show UI immediately, fetch in background ── */
+async function init(){
+  document.getElementById('loading-state').classList.add('hidden');
+  document.getElementById('error-state').classList.add('hidden');
+  wireAll();
+  renderAll();
+
+  sb.auth.onAuthStateChange(function(event,session){applyAuthState(session&&session.user?session.user:null);});
+  try{var ar=await sb.auth.getUser();applyAuthState(ar&&ar.data&&ar.data.user?ar.data.user:null);}catch(e){}
+
+  var _timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('Connection timed out — check network or DB status'));},8000);});
+  try{
+    await Promise.race([fetchPlayers(),_timeout]);
+    renderAll();
+  }catch(err){
+    setDbStatus('error');
+    console.warn('[init] fetchPlayers failed:',err.message);
+    toast('DB offline: '+err.message,'warn');
+    var rb=document.getElementById('db-retry');if(rb)rb.classList.remove('hidden');
+  }
+  subscribeRT();
 }
 
-/* ── Init ───────────────────────────────────────────────────────── */
-async function init(){
-  document.getElementById('loading-state').classList.remove('hidden');
-  document.getElementById('error-state').classList.add('hidden');
-  document.getElementById('app').classList.add('hidden');
-
-  sb.auth.onAuthStateChange(function(event,session){applyAuthState(session?session.user:null);});
-  try{var{data:{user}}=await sb.auth.getUser();applyAuthState(user);}catch(e){}
-
-  try{await fetchPlayers();}catch(err){
-    document.getElementById('loading-state').classList.add('hidden');
-    document.getElementById('error-state').classList.remove('hidden');
-    document.getElementById('error-msg').textContent=err.message;
-    return;
-  }
-  document.getElementById('loading-state').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  wireAll();renderAll();subscribeRT();
+async function retryFetch(){
+  var rb=document.getElementById('db-retry');if(rb)rb.classList.add('hidden');
+  setDbStatus('loading');
+  try{await fetchPlayers();renderAll();toast('Roster loaded!','success');}
+  catch(err){setDbStatus('error');toast('Still offline: '+err.message,'error');var rb2=document.getElementById('db-retry');if(rb2)rb2.classList.remove('hidden');}
 }
 
 init();
